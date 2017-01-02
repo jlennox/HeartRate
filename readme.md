@@ -23,11 +23,9 @@ customizations needed by request.
 
 How to use
 ----------
-[Download prebuilt binaries](https://github.com/jlennox/HeartRate/releases) or
-build from source.
-
-# Connect appropriate bluetooth device inside Window's bluetooth settings.
-# Run HeartRate.exe
+1. Connect appropriate bluetooth device inside Window's bluetooth settings.
+2. [Download prebuilt binaries](https://github.com/jlennox/HeartRate/releases) or build from source.
+3. Run HeartRate.exe
 
 I do not have the time to turn this into production grade software but I am
 willing to expand it to your needs. At startup, the program searches for an
