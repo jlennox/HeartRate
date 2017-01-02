@@ -23,12 +23,18 @@ customizations needed by request.
 
 How to use
 ----------
+[Download prebuilt binaries](https://github.com/jlennox/HeartRate/releases) or
+build from source.
+
 I do not have the time to turn this into production grade software but I am
 willing to expand it to your needs. At startup, the program searches for an
 appropriate device and attempts to register a notification event for
 heart_rate_measurement. If this fails, the error is likely vague and not overly
 helpful. If you believe your device should work with this software but does
 not, please open a github issue with specifics.
+
+This will not work for any general USB/bluetooth heart rate monitor. It has to
+be a Bluetooth Low Energy device supporting heart_rate_measurement.
 
 By default, only an icon in the system tray is displayed. When the heart rate
 goes over an alert threshold, a balloon notification shows.
