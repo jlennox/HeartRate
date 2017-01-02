@@ -154,7 +154,7 @@ namespace HeartRate
 
         private static string ColorToString(Color color)
         {
-            return color.ToArgb().ToString("X");
+            return color.ToArgb().ToString("X").PadLeft(8, '0');
         }
 
         public static HeartRateSettingsProtocol Load()
@@ -176,8 +176,7 @@ namespace HeartRate
             using (var fs = File.OpenRead(_filename))
             {
                 // Exception timebomb #2
-                return _serializer.Deserialize(fs)
-                    as HeartRateSettingsProtocol;
+                return _serializer.Deserialize(fs) as HeartRateSettingsProtocol;
             }
         }
 

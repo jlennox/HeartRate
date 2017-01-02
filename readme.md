@@ -42,6 +42,24 @@ goes over an alert threshold, a balloon notification shows.
 Clicking the system tray icon reveals a window with scaling text. This is for
 Twitch streamers to be able to region for broadcast.
 
+Settings
+--------
 Right clicking the system tray icon gives the option to edit an XML settings
 file. When the editor is closed, the settings will be reloaded automatically.
 The file is %appdata%\HeartRate\settings.xml
+
+`color` values are formatted as 32bit ARGB hex values. Leading 0's are optional.
+
+| Setting    | Type | Default  | Description |
+|------------|------|----------|-------------|
+| `FontName` | text | Arial | The font name for the system tray icon. |
+| `UIFontName` | text | Arial | The font name for the window display. |
+| `AlertLevel` | number | 65 | The heart rate to display a system tray notification balloon at. 0 to disable. |
+| `WarnLevel` | number | 70 | The heart rate to use `WarnColor` at. 0 to disable. |
+| `AlertTimeout` | number | 120000 | The amount of milliseconds to cooldown for being able to show an alert after one was shown. |
+| `DisconnectedTimeout` | number | 10000 | The amount of milliseconds after disconnecting to await for a valid device connection before displaying "X" |
+| `Color` | color | FFADD8E6 | The default color for the system tray icon. |
+| `WarnColor` | color | FFFF0000 | The system tray icon color once `WarnLevel` has been met. |
+| `UIColor` | color | FF00008B | The default color for the window display. |
+| `UIWarnColor` | color | FFFF0000 | The window display color once `WarnLevel` has been met. |
+| `UIBackgroundColor` | color | 00FFFFFF | The background color for the window display. |

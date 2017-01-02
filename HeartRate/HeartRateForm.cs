@@ -33,6 +33,9 @@ namespace HeartRate
         [DllImport("User32.dll")]
         private static extern int GetSystemMetrics(SystemMetric nIndex);
 
+        [DllImport("User32.dll")]
+        private static extern int SetForegroundWindow(int hWnd);
+
         private enum SystemMetric
         {
             SmallIconX = 49, // SM_CXSMICON
@@ -208,10 +211,13 @@ namespace HeartRate
             catch { }
         }
 
-        private void uxBpmNotifyIcon_Click(object sender, EventArgs e)
+        private void uxBpmNotifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
-            Show();
-            BringToFront();
+            if (e.Button == MouseButtons.Left)
+            {
+                Show();
+                SetForegroundWindow(Handle.ToInt32());
+            }
         }
 
         private void HeartRateForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -262,6 +268,11 @@ namespace HeartRate
             };
 
             thread.Start();
+        }
+
+        private void uxExitMenuItem_Click(object sender, EventArgs e)
+        {
+            Environment.Exit(0);
         }
     }
 }
