@@ -35,3 +35,7 @@ goes over an alert threshold, a balloon notification shows.
 
 Clicking the system tray icon reveals a window with scaling text. This is for
 Twitch streamers to be able to region for broadcast.
+
+Right clicking the system tray icon gives the option to edit an XML settings
+file. When the editor is closed, the settings will be reloaded automatically.
+The file is %appdata%\HeartRate\settings.xml

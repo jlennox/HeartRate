@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace HeartRate
@@ -26,7 +27,6 @@ namespace HeartRate
         private readonly Font _measurementFont;
         private readonly Stopwatch _alertTimeout = new Stopwatch();
         private readonly Stopwatch _disconnectedTimeout = new Stopwatch();
-        private readonly Action _updateUx;
 
         private string _iconText;
 
@@ -41,24 +41,27 @@ namespace HeartRate
 
         public HeartRateForm()
         {
+            _settings.Load();
+            _settings.Save();
             _service = new HeartRateService();
             _iconBitmap = new Bitmap(_iconWidth, _iconHeight);
             _iconGraphics = Graphics.FromImage(_iconBitmap);
             _measurementFont = new Font(
                 _settings.FontName, _iconWidth,
                 GraphicsUnit.Pixel);
-            _updateUx = new Action(UpdateUx);
 
             InitializeComponent();
         }
 
         private void HeartRateForm_Load(object sender, EventArgs e)
         {
-            ResizeLabel();
+            UpdateLabelFont();
             Hide();
 
             try
             {
+                // InitiateDefault is blocking. A better UI would show some type
+                // of status during this time, but it's not super important.
                 _service.InitiateDefault();
             }
             catch (Exception ex)
@@ -122,19 +125,33 @@ namespace HeartRate
 
                 var color = isWarn ? _settings.WarnColor : _settings.Color;
 
+                using (var brush = new SolidBrush(color))
                 using (var font = new Font(_settings.FontName,
                     _iconHeight * (_iconWidth / sizingMeasurement.Width),
                     GraphicsUnit.Pixel))
                 {
                     _iconGraphics.DrawString(
-                        iconText, font, color,
+                        iconText, font, brush,
                         new RectangleF(0, 0, _iconWidth, _iconHeight),
                         _iconStringFormat);
                 }
 
                 _iconText = iconText;
 
-                Invoke(_updateUx);
+                Invoke(new Action(() => {
+                    uxBpmLabel.Text = _iconText;
+                    uxBpmLabel.ForeColor = isWarn
+                        ? _settings.UIWarnColor
+                        : _settings.UIColor;
+                    uxBpmLabel.BackColor = _settings.UIBackgroundColor;
+
+                    var font = _settings.UIFontName;
+
+                    if (uxBpmLabel.Font.FontFamily.Name != font)
+                    {
+                        UpdateLabelFont();
+                    }
+                }));
 
                 using (var icon = Icon.FromHandle(_iconBitmap.GetHicon()))
                 {
@@ -153,11 +170,6 @@ namespace HeartRate
                     }
                 }
             }
-        }
-
-        private void UpdateUx()
-        {
-            uxBpmLabel.Text = _iconText;
         }
 
         protected override void Dispose(bool disposing)
@@ -213,14 +225,43 @@ namespace HeartRate
 
         private void HeartRateForm_ResizeEnd(object sender, EventArgs e)
         {
-            ResizeLabel();
+            UpdateLabelFont();
         }
 
-        private void ResizeLabel()
+        private void UpdateLabelFont()
         {
             uxBpmLabel.Font = new Font(
-                uxBpmLabel.Font.FontFamily, uxBpmLabel.Height,
+                _settings.UIFontName, uxBpmLabel.Height,
                 GraphicsUnit.Pixel);
+        }
+
+        private void uxMenuEditSettings_Click(object sender, EventArgs e)
+        {
+            var thread = new Thread(() => {
+                lock (_updateSync)
+                {
+                    _settings.Save();
+                }
+
+                using (var process = Process.Start(new ProcessStartInfo {
+                    FileName = HeartRateSettings.Filename,
+                    UseShellExecute = true,
+                    Verb = "EDIT"
+                }))
+                {
+                    process.WaitForExit();
+                }
+
+                lock (_updateSync)
+                {
+                    _settings.Load();
+                }
+            }) {
+                IsBackground = true,
+                Name = "Edit config"
+            };
+
+            thread.Start();
         }
     }
 }

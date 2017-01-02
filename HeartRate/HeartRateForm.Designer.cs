@@ -17,14 +17,32 @@
         {
             this.components = new System.ComponentModel.Container();
             this.uxBpmNotifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.uxNotifyIconContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.uxEditSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uxBpmLabel = new System.Windows.Forms.Label();
+            this.uxNotifyIconContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // uxBpmNotifyIcon
             // 
+            this.uxBpmNotifyIcon.ContextMenuStrip = this.uxNotifyIconContextMenu;
             this.uxBpmNotifyIcon.Text = "notifyIcon1";
             this.uxBpmNotifyIcon.Visible = true;
             this.uxBpmNotifyIcon.Click += new System.EventHandler(this.uxBpmNotifyIcon_Click);
+            // 
+            // uxNotifyIconContextMenu
+            // 
+            this.uxNotifyIconContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.uxEditSettingsMenuItem});
+            this.uxNotifyIconContextMenu.Name = "uxNotifyIconContextMenu";
+            this.uxNotifyIconContextMenu.Size = new System.Drawing.Size(148, 26);
+            // 
+            // uxEditSettingsMenuItem
+            // 
+            this.uxEditSettingsMenuItem.Name = "uxEditSettingsMenuItem";
+            this.uxEditSettingsMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.uxEditSettingsMenuItem.Text = "Edit settings...";
+            this.uxEditSettingsMenuItem.Click += new System.EventHandler(this.uxMenuEditSettings_Click);
             // 
             // uxBpmLabel
             // 
@@ -50,6 +68,7 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.HeartRateForm_FormClosing);
             this.Load += new System.EventHandler(this.HeartRateForm_Load);
             this.ResizeEnd += new System.EventHandler(this.HeartRateForm_ResizeEnd);
+            this.uxNotifyIconContextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -57,6 +76,8 @@
         #endregion
         private System.Windows.Forms.NotifyIcon uxBpmNotifyIcon;
         private System.Windows.Forms.Label uxBpmLabel;
+        private System.Windows.Forms.ContextMenuStrip uxNotifyIconContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem uxEditSettingsMenuItem;
     }
 }
 
