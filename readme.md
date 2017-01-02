@@ -26,15 +26,18 @@ How to use
 [Download prebuilt binaries](https://github.com/jlennox/HeartRate/releases) or
 build from source.
 
+# Connect appropriate bluetooth device inside Window's bluetooth settings.
+# Run HeartRate.exe
+
 I do not have the time to turn this into production grade software but I am
 willing to expand it to your needs. At startup, the program searches for an
 appropriate device and attempts to register a notification event for
-heart_rate_measurement. If this fails, the error is likely vague and not overly
+`heart_rate_measurement`. If this fails, the error is likely vague and not overly
 helpful. If you believe your device should work with this software but does
 not, please open a github issue with specifics.
 
 This will not work for any general USB/bluetooth heart rate monitor. It has to
-be a Bluetooth Low Energy device supporting heart_rate_measurement.
+be a Bluetooth Low Energy device supporting `heart_rate_measurement`.
 
 By default, only an icon in the system tray is displayed. When the heart rate
 goes over an alert threshold, a balloon notification shows.
@@ -46,7 +49,7 @@ Settings
 --------
 Right clicking the system tray icon gives the option to edit an XML settings
 file. When the editor is closed, the settings will be reloaded automatically.
-The file is %appdata%\HeartRate\settings.xml
+The file is `%appdata%\HeartRate\settings.xml`
 
 `color` values are formatted as 32bit ARGB hex values. Leading 0's are optional.
 
