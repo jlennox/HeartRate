@@ -12,6 +12,10 @@ namespace HeartRate
 {
     public partial class HeartRateForm : Form
     {
+        // Excessively call the main rendering function to force any leaks that
+        // could happen.
+        private const bool _leaktest = false;
+
         private readonly HeartRateService _service;
         private readonly object _disposeSync = new object();
         private readonly object _updateSync = new object();
@@ -29,12 +33,17 @@ namespace HeartRate
         private readonly Stopwatch _disconnectedTimeout = new Stopwatch();
 
         private string _iconText;
+        private Font _lastFont;
+        private IntPtr _oldIconHandle;
 
-        [DllImport("User32.dll")]
+        [DllImport("user32.dll")]
         private static extern int GetSystemMetrics(SystemMetric nIndex);
 
-        [DllImport("User32.dll")]
+        [DllImport("user32.dll")]
         private static extern int SetForegroundWindow(int hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool DestroyIcon(IntPtr handle);
 
         private enum SystemMetric
         {
@@ -81,6 +90,32 @@ namespace HeartRate
         }
 
         private void Service_HeartRateUpdated(
+            ContactSensorStatus status,
+            int bpm)
+        {
+            try
+            {
+                if (_leaktest)
+                {
+                    for (var i = 0; i < 4000; ++i)
+                    {
+                        Service_HeartRateUpdatedCore(status, bpm);
+                    }
+
+                    return;
+                }
+
+                Service_HeartRateUpdatedCore(status, bpm);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception in Service_HeartRateUpdated {ex}");
+
+                Debugger.Break();
+            }
+        }
+
+        private void Service_HeartRateUpdatedCore(
             ContactSensorStatus status,
             int bpm)
         {
@@ -156,7 +191,9 @@ namespace HeartRate
                     }
                 }));
 
-                using (var icon = Icon.FromHandle(_iconBitmap.GetHicon()))
+                var iconHandle = _iconBitmap.GetHicon();
+
+                using (var icon = Icon.FromHandle(iconHandle))
                 {
                     uxBpmNotifyIcon.Icon = icon;
 
@@ -172,6 +209,13 @@ namespace HeartRate
                             alertText, alertText, ToolTipIcon.Warning);
                     }
                 }
+
+                if (_oldIconHandle != IntPtr.Zero)
+                {
+                    DestroyIcon(_oldIconHandle);
+                }
+
+                _oldIconHandle = iconHandle;
             }
         }
 
@@ -236,9 +280,16 @@ namespace HeartRate
 
         private void UpdateLabelFont()
         {
-            uxBpmLabel.Font = new Font(
-                _settings.UIFontName, uxBpmLabel.Height,
-                GraphicsUnit.Pixel);
+            lock (_updateSync)
+            {
+                var newFont = new Font(
+                    _settings.UIFontName, uxBpmLabel.Height,
+                    GraphicsUnit.Pixel);
+
+                uxBpmLabel.Font = newFont;
+                TryDispose(_lastFont);
+                _lastFont = newFont;
+            }
         }
 
         private void uxMenuEditSettings_Click(object sender, EventArgs e)
