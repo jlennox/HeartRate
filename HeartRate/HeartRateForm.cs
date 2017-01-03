@@ -295,11 +295,6 @@ namespace HeartRate
         private void uxMenuEditSettings_Click(object sender, EventArgs e)
         {
             var thread = new Thread(() => {
-                lock (_updateSync)
-                {
-                    _settings.Save();
-                }
-
                 using (var process = Process.Start(new ProcessStartInfo {
                     FileName = HeartRateSettings.Filename,
                     UseShellExecute = true,
