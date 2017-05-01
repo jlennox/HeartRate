@@ -120,7 +120,7 @@ namespace HeartRate
             int bpm)
         {
             var isDisconnected = bpm == 0 ||
-                status != ContactSensorStatus.Contact;
+                status == ContactSensorStatus.NoContact;
 
             var iconText = bpm.ToString();
 
