@@ -64,3 +64,4 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `UIColor` | color | FF00008B | The default color for the window display. |
 | `UIWarnColor` | color | FFFF0000 | The window display color once `WarnLevel` has been met. |
 | `UIBackgroundColor` | color | 00FFFFFF | The background color for the window display. |
+| `Sizable` | bool | true | If the window is a normal sizable window. `false` looks better but is not recognized by OBS as a window. |

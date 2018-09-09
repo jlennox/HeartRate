@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace HeartRate
@@ -29,6 +25,7 @@ namespace HeartRate
         public Color UIColor { get; set; }
         public Color UIWarnColor { get; set; }
         public Color UIBackgroundColor { get; set; }
+        public bool Sizable { get; set; }
 
         public static HeartRateSettings CreateDefault()
         {
@@ -44,7 +41,8 @@ namespace HeartRate
                 WarnColor = Color.Red,
                 UIColor = Color.DarkBlue,
                 UIWarnColor = Color.Red,
-                UIBackgroundColor = Color.Transparent
+                UIBackgroundColor = Color.Transparent,
+                Sizable = true
             };
         }
 
@@ -73,6 +71,7 @@ namespace HeartRate
             UIColor = ColorFromString(protocol.UIColor);
             UIWarnColor = ColorFromString(protocol.UIWarnColor);
             UIBackgroundColor = ColorFromString(protocol.UIBackgroundColor);
+            Sizable = protocol.Sizable;
 
             // In the future:
             // if (protocol.Version >= 2) ...
@@ -133,6 +132,7 @@ namespace HeartRate
         public string UIColor { get; set; }
         public string UIWarnColor { get; set; }
         public string UIBackgroundColor { get; set; }
+        public bool Sizable { get; set; }
 
         public HeartRateSettingsProtocol() { }
 
@@ -150,6 +150,7 @@ namespace HeartRate
             UIColor = ColorToString(settings.UIColor);
             UIWarnColor = ColorToString(settings.UIWarnColor);
             UIBackgroundColor = ColorToString(settings.UIBackgroundColor);
+            Sizable = settings.Sizable;
         }
 
         private static string ColorToString(Color color)
