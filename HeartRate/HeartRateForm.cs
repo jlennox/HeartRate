@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -217,6 +218,23 @@ namespace HeartRate
                 }
 
                 _oldIconHandle = iconHandle;
+
+                if (!string.IsNullOrWhiteSpace(_settings.LogFile))
+                {
+                    string data = null;
+
+                    switch ((_settings.LogFormat ?? "").ToLower())
+                    {
+                        case "csv":
+                            data = $"{DateTime.Now.ToOADate()},{bpm},{status}\r\n";
+                            break;
+                    }
+
+                    if (data != null)
+                    {
+                        File.AppendAllText(_settings.LogFile, data);
+                    }
+                }
             }
         }
 
@@ -224,10 +242,7 @@ namespace HeartRate
         {
             if (disposing)
             {
-                if (components != null)
-                {
-                    components.Dispose();
-                }
+                TryDispose(components);
 
                 lock (_disposeSync)
                 {

@@ -21,6 +21,11 @@ into their setups, I found there was a mixture of excessive hardware and
 software needed. I am not a Twitch streamer and am willing to add the
 customizations needed by request.
 
+Change log
+----------
+**1.4**
+Add LogFile/LogFormat settings for writing BPM log to file.
+
 Notice on deployment
 --------
 Some builds of Windows 10 have bug related to security which causes Desktop
@@ -92,3 +97,5 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `UIWarnColor` | color | FFFF0000 | The window display color once `WarnLevel` has been met. |
 | `UIBackgroundColor` | color | 00FFFFFF | The background color for the window display. |
 | `Sizable` | bool | true | If the window is a normal sizable window. `false` looks better but is not recognized by OBS as a window. |
+| `LogFormat` | text | csv | The format to write to the LogFile. Only "csv" is valid. |
+| `LogFile` | text | "" | The full path of where to write the logged data to. If empty, no file log is kept. |

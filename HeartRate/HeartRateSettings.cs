@@ -13,19 +13,21 @@ namespace HeartRate
         // See note in Load for how to version the file.
         private const int _settingsVersion = 1;
 
-        public int Version { get; set; }
-        public string FontName { get; set; }
-        public string UIFontName { get; set; }
-        public int AlertLevel { get; set; }
-        public int WarnLevel { get; set; }
-        public TimeSpan AlertTimeout { get; set; }
-        public TimeSpan DisconnectedTimeout { get; set; }
-        public Color Color { get; set; }
-        public Color WarnColor { get; set; }
-        public Color UIColor { get; set; }
-        public Color UIWarnColor { get; set; }
-        public Color UIBackgroundColor { get; set; }
-        public bool Sizable { get; set; }
+        public int Version { get; private set; }
+        public string FontName { get; private set; }
+        public string UIFontName { get; private set; }
+        public int AlertLevel { get; private set; }
+        public int WarnLevel { get; private set; }
+        public TimeSpan AlertTimeout { get; private set; }
+        public TimeSpan DisconnectedTimeout { get; private set; }
+        public Color Color { get; private set; }
+        public Color WarnColor { get; private set; }
+        public Color UIColor { get; private set; }
+        public Color UIWarnColor { get; private set; }
+        public Color UIBackgroundColor { get; private set; }
+        public bool Sizable { get; private set; }
+        public string LogFormat { get; private set; }
+        public string LogFile { get; private set; }
 
         public static HeartRateSettings CreateDefault()
         {
@@ -42,7 +44,9 @@ namespace HeartRate
                 UIColor = Color.DarkBlue,
                 UIWarnColor = Color.Red,
                 UIBackgroundColor = Color.Transparent,
-                Sizable = true
+                Sizable = true,
+                LogFormat = "csv",
+                LogFile = null
             };
         }
 
@@ -120,19 +124,21 @@ namespace HeartRate
 
         private static readonly string _filename = HeartRateSettings.Filename;
 
-        public int Version { get; set; }
-        public string FontName { get; set; }
-        public string UIFontName { get; set; }
-        public int AlertLevel { get; set; }
-        public int WarnLevel { get; set; }
-        public int AlertTimeout { get; set; }
-        public int DisconnectedTimeout { get; set; }
-        public string Color { get; set; }
-        public string WarnColor { get; set; }
-        public string UIColor { get; set; }
-        public string UIWarnColor { get; set; }
-        public string UIBackgroundColor { get; set; }
-        public bool Sizable { get; set; }
+        public int Version { get; }
+        public string FontName { get; }
+        public string UIFontName { get; }
+        public int AlertLevel { get; }
+        public int WarnLevel { get; }
+        public int AlertTimeout { get; }
+        public int DisconnectedTimeout { get; }
+        public string Color { get; }
+        public string WarnColor { get; }
+        public string UIColor { get; }
+        public string UIWarnColor { get; }
+        public string UIBackgroundColor { get; }
+        public bool Sizable { get; }
+        public string LogFormat { get; }
+        public string LogFile { get; }
 
         public HeartRateSettingsProtocol() { }
 
@@ -151,6 +157,8 @@ namespace HeartRate
             UIWarnColor = ColorToString(settings.UIWarnColor);
             UIBackgroundColor = ColorToString(settings.UIBackgroundColor);
             Sizable = settings.Sizable;
+            LogFormat = settings.LogFormat;
+            LogFile = settings.LogFile;
         }
 
         private static string ColorToString(Color color)
