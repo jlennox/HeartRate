@@ -98,4 +98,4 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `UIBackgroundColor` | color | 00FFFFFF | The background color for the window display. |
 | `Sizable` | bool | true | If the window is a normal sizable window. `false` looks better but is not recognized by OBS as a window. |
 | `LogFormat` | text | csv | The format to write to the LogFile. Only "csv" is valid. |
-| `LogFile` | text | "" | The full path of where to write the logged data to. If empty, no file log is kept. |
+| `LogFile` | text | *empty* | The full path of where to write the logged data to. If empty, no file log is kept. Example: `C:\users\joe\desktop\heartrate.csv`  |

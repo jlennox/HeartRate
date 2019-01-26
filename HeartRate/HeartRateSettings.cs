@@ -8,30 +8,38 @@ namespace HeartRate
 {
     public class HeartRateSettings
     {
-        public static readonly string Filename = GetFilename();
+        private readonly string _filename;
+
+        private static readonly Lazy<string> _generatedFilename =
+            new Lazy<string>(GetFilenameCore);
 
         // See note in Load for how to version the file.
         private const int _settingsVersion = 1;
 
-        public int Version { get; private set; }
-        public string FontName { get; private set; }
-        public string UIFontName { get; private set; }
-        public int AlertLevel { get; private set; }
-        public int WarnLevel { get; private set; }
-        public TimeSpan AlertTimeout { get; private set; }
-        public TimeSpan DisconnectedTimeout { get; private set; }
-        public Color Color { get; private set; }
-        public Color WarnColor { get; private set; }
-        public Color UIColor { get; private set; }
-        public Color UIWarnColor { get; private set; }
-        public Color UIBackgroundColor { get; private set; }
-        public bool Sizable { get; private set; }
-        public string LogFormat { get; private set; }
-        public string LogFile { get; private set; }
+        public int Version { get; set; }
+        public string FontName { get; set; }
+        public string UIFontName { get; set; }
+        public int AlertLevel { get; set; }
+        public int WarnLevel { get; set; }
+        public TimeSpan AlertTimeout { get; set; }
+        public TimeSpan DisconnectedTimeout { get; set; }
+        public Color Color { get; set; }
+        public Color WarnColor { get; set; }
+        public Color UIColor { get; set; }
+        public Color UIWarnColor { get; set; }
+        public Color UIBackgroundColor { get; set; }
+        public bool Sizable { get; set; }
+        public string LogFormat { get; set; }
+        public string LogFile { get; set; }
 
-        public static HeartRateSettings CreateDefault()
+        public HeartRateSettings(string filename)
         {
-            return new HeartRateSettings {
+            _filename = filename;
+        }
+
+        public static HeartRateSettings CreateDefault(string filename)
+        {
+            return new HeartRateSettings(filename) {
                 Version = _settingsVersion,
                 FontName = "Arial",
                 UIFontName = "Arial",
@@ -46,18 +54,18 @@ namespace HeartRate
                 UIBackgroundColor = Color.Transparent,
                 Sizable = true,
                 LogFormat = "csv",
-                LogFile = null
+                LogFile = " " // Initialize to " " instead of null so the entry is still written.
             };
         }
 
         public void Save()
         {
-            HeartRateSettingsProtocol.Save(this);
+            HeartRateSettingsProtocol.Save(this, _filename);
         }
 
         public void Load()
         {
-            var protocol = HeartRateSettingsProtocol.Load();
+            var protocol = HeartRateSettingsProtocol.Load(_filename);
 
             if (protocol == null)
             {
@@ -76,6 +84,8 @@ namespace HeartRate
             UIWarnColor = ColorFromString(protocol.UIWarnColor);
             UIBackgroundColor = ColorFromString(protocol.UIBackgroundColor);
             Sizable = protocol.Sizable;
+            LogFormat = protocol.LogFormat;
+            LogFile = protocol.LogFile;
 
             // In the future:
             // if (protocol.Version >= 2) ...
@@ -86,7 +96,9 @@ namespace HeartRate
             return Color.FromArgb(Convert.ToInt32(s, 16));
         }
 
-        private static string GetFilename()
+        public static string GetFilename() => _generatedFilename.Value;
+
+        private static string GetFilenameCore()
         {
             var dataPath = Environment.ExpandEnvironmentVariables("%appdata%");
 
@@ -122,24 +134,27 @@ namespace HeartRate
         private static readonly XmlSerializer _serializer =
             new XmlSerializer(typeof(HeartRateSettingsProtocol));
 
-        private static readonly string _filename = HeartRateSettings.Filename;
+        // Do not remove the setter as it's needed by the serializer.
+        // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+        public int Version { get; set; }
+        public string FontName { get; set; }
+        public string UIFontName { get; set; }
+        public int AlertLevel { get; set; }
+        public int WarnLevel { get; set; }
+        public int AlertTimeout { get; set; }
+        public int DisconnectedTimeout { get; set; }
+        public string Color { get; set; }
+        public string WarnColor { get; set; }
+        public string UIColor { get; set; }
+        public string UIWarnColor { get; set; }
+        public string UIBackgroundColor { get; set; }
+        public bool Sizable { get; set; }
+        public string LogFormat { get; set; }
+        public string LogFile { get; set; }
+        // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
 
-        public int Version { get; }
-        public string FontName { get; }
-        public string UIFontName { get; }
-        public int AlertLevel { get; }
-        public int WarnLevel { get; }
-        public int AlertTimeout { get; }
-        public int DisconnectedTimeout { get; }
-        public string Color { get; }
-        public string WarnColor { get; }
-        public string UIColor { get; }
-        public string UIWarnColor { get; }
-        public string UIBackgroundColor { get; }
-        public bool Sizable { get; }
-        public string LogFormat { get; }
-        public string LogFile { get; }
-
+        // Required by deserializer.
+        // ReSharper disable once UnusedMember.Global
         public HeartRateSettingsProtocol() { }
 
         private HeartRateSettingsProtocol(HeartRateSettings settings)
@@ -158,44 +173,44 @@ namespace HeartRate
             UIBackgroundColor = ColorToString(settings.UIBackgroundColor);
             Sizable = settings.Sizable;
             LogFormat = settings.LogFormat;
-            LogFile = settings.LogFile;
+            LogFile = settings.LogFile ?? " ";
         }
 
         private static string ColorToString(Color color)
         {
-            return color.ToArgb().ToString("X").PadLeft(8, '0');
+            return color.ToArgb().ToString("X8");
         }
 
-        public static HeartRateSettingsProtocol Load()
+        internal static HeartRateSettingsProtocol Load(string filename)
         {
-            Debug.WriteLine($"Loading from {_filename}");
+            Debug.WriteLine($"Loading from {filename}");
 
-            if (_filename == null)
+            if (filename == null)
             {
                 throw new FileNotFoundException(
-                    $"Unable to read file {_filename}");
+                    $"Unable to read file {filename}");
             }
 
-            if (!File.Exists(_filename))
+            if (!File.Exists(filename))
             {
                 return null;
             }
 
             // Exception timebomb #1
-            using (var fs = File.OpenRead(_filename))
+            using (var fs = File.OpenRead(filename))
             {
                 // Exception timebomb #2
                 return _serializer.Deserialize(fs) as HeartRateSettingsProtocol;
             }
         }
 
-        public static void Save(HeartRateSettings settings)
+        internal static void Save(HeartRateSettings settings, string filename)
         {
-            Debug.WriteLine($"Saving to {_filename}");
+            Debug.WriteLine($"Saving to {filename}");
 
             var protocol = new HeartRateSettingsProtocol(settings);
 
-            using (var fs = File.OpenWrite(_filename))
+            using (var fs = File.OpenWrite(filename))
             {
                 _serializer.Serialize(fs, protocol);
             }

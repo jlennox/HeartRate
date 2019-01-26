@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
@@ -20,7 +18,14 @@ namespace HeartRate
         Contact
     }
 
-    class HeartRateService : IDisposable
+    internal interface IHeartRateService : IDisposable
+    {
+        event HeartRateService.HeartRateUpdateEventHandler HeartRateUpdated;
+        void InitiateDefault();
+        void Cleanup();
+    }
+
+    internal class HeartRateService : IHeartRateService
     {
         // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml
         private const int _heartRateMeasurementCharacteristicId = 0x2A37;
@@ -44,7 +49,8 @@ namespace HeartRate
 
             if (device == null)
             {
-                throw new ArgumentOutOfRangeException(
+                throw new ArgumentNullException(
+                    nameof(device),
                     "Unable to locate heart rate device.");
             }
 
@@ -84,7 +90,7 @@ namespace HeartRate
             Debug.WriteLine($"Started {status}");
         }
 
-        private void HeartRate_ValueChanged(
+        public void HeartRate_ValueChanged(
             GattCharacteristic sender,
             GattValueChangedEventArgs args)
         {
@@ -116,13 +122,13 @@ namespace HeartRate
                         : reader.ReadByte();
                 }
 
-                Debug.WriteLine($"Read {flags.ToString("X")} {contactSensor} {bpm}");
+                Debug.WriteLine($"Read {flags:X} {contactSensor} {bpm}");
 
                 HeartRateUpdated?.Invoke(contactSensor, bpm);
             }
         }
 
-        private void Cleanup()
+        public void Cleanup()
         {
             var service = Interlocked.Exchange(ref _service, null);
 

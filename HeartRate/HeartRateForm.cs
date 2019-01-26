@@ -14,12 +14,12 @@ namespace HeartRate
         // could happen.
         private const bool _leaktest = false;
 
-        private readonly HeartRateService _service;
+        private readonly IHeartRateService _service;
         private readonly object _disposeSync = new object();
         private readonly object _updateSync = new object();
         private readonly Bitmap _iconBitmap;
         private readonly Graphics _iconGraphics;
-        private readonly HeartRateSettings _settings = HeartRateSettings.CreateDefault();
+        private readonly HeartRateSettings _settings;
         private readonly int _iconWidth = GetSystemMetrics(SystemMetric.SmallIconX);
         private readonly int _iconHeight = GetSystemMetrics(SystemMetric.SmallIconY);
         private readonly StringFormat _iconStringFormat = new StringFormat {
@@ -49,22 +49,39 @@ namespace HeartRate
             SmallIconY = 50, // SM_CYSMICON
         }
 
-        public HeartRateForm()
+        public HeartRateForm() : this(
+            new HeartRateService(),
+            HeartRateSettings.GetFilename())
         {
-            _settings.Load();
-            _settings.Save();
-            _service = new HeartRateService();
-            _iconBitmap = new Bitmap(_iconWidth, _iconHeight);
-            _iconGraphics = Graphics.FromImage(_iconBitmap);
-            _measurementFont = new Font(
-                _settings.FontName, _iconWidth,
-                GraphicsUnit.Pixel);
+        }
 
-            InitializeComponent();
+        internal HeartRateForm(
+            IHeartRateService service,
+            string settingsFilename)
+        {
+            try
+            {
+                _settings = HeartRateSettings.CreateDefault(settingsFilename);
+                _settings.Load();
+                _settings.Save();
+                _service = service;
+                _iconBitmap = new Bitmap(_iconWidth, _iconHeight);
+                _iconGraphics = Graphics.FromImage(_iconBitmap);
+                _measurementFont = new Font(
+                    _settings.FontName, _iconWidth,
+                    GraphicsUnit.Pixel);
 
-            FormBorderStyle = _settings.Sizable
-                ? FormBorderStyle.Sizable
-                : FormBorderStyle.SizableToolWindow;
+                InitializeComponent();
+
+                FormBorderStyle = _settings.Sizable
+                    ? FormBorderStyle.Sizable
+                    : FormBorderStyle.SizableToolWindow;
+            }
+            catch
+            {
+                TryDispose(service);
+                throw;
+            }
         }
 
         private void HeartRateForm_Load(object sender, EventArgs e)
@@ -312,7 +329,7 @@ namespace HeartRate
         {
             var thread = new Thread(() => {
                 using (var process = Process.Start(new ProcessStartInfo {
-                    FileName = HeartRateSettings.Filename,
+                    FileName = HeartRateSettings.GetFilename(),
                     UseShellExecute = true,
                     Verb = "EDIT"
                 }))
