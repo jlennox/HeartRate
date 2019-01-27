@@ -29,6 +29,8 @@ namespace HeartRate
         private readonly Font _measurementFont;
         private readonly Stopwatch _alertTimeout = new Stopwatch();
         private readonly Stopwatch _disconnectedTimeout = new Stopwatch();
+        private readonly DateTime _startedAt;
+        private string _logfilename;
 
         private string _iconText;
         private Font _lastFont;
@@ -51,20 +53,23 @@ namespace HeartRate
 
         public HeartRateForm() : this(
             new HeartRateService(),
-            HeartRateSettings.GetFilename())
+            HeartRateSettings.GetFilename(),
+            DateTime.Now)
         {
         }
 
         internal HeartRateForm(
             IHeartRateService service,
-            string settingsFilename)
+            string settingsFilename,
+            DateTime now)
         {
             try
             {
                 _settings = HeartRateSettings.CreateDefault(settingsFilename);
-                _settings.Load();
+                LoadSettingsLocked();
                 _settings.Save();
                 _service = service;
+                _startedAt = now;
                 _iconBitmap = new Bitmap(_iconWidth, _iconHeight);
                 _iconGraphics = Graphics.FromImage(_iconBitmap);
                 _measurementFont = new Font(
@@ -236,14 +241,19 @@ namespace HeartRate
 
                 _oldIconHandle = iconHandle;
 
-                if (!string.IsNullOrWhiteSpace(_settings.LogFile))
+                if (_logfilename != null)
                 {
                     string data = null;
+
+                    var dateString = DateTimeFormatter.Format(
+                        _settings.LogDateFormat,
+                        DateTime.Now,
+                        DateTimeFormatter.DefaultColumn);
 
                     switch ((_settings.LogFormat ?? "").ToLower())
                     {
                         case "csv":
-                            data = $"{DateTime.Now.ToOADate()},{bpm},{status}\r\n";
+                            data = $"{dateString},{bpm},{status}\r\n";
                             break;
                     }
 
@@ -339,7 +349,7 @@ namespace HeartRate
 
                 lock (_updateSync)
                 {
-                    _settings.Load();
+                    LoadSettingsLocked();
                 }
             }) {
                 IsBackground = true,
@@ -347,6 +357,17 @@ namespace HeartRate
             };
 
             thread.Start();
+        }
+
+        private void LoadSettingsLocked()
+        {
+            _settings.Load();
+
+            var logfile = _settings.LogFile;
+
+            _logfilename = string.IsNullOrWhiteSpace(logfile)
+                ? null
+                : DateTimeFormatter.FormatStringTokens(logfile, _startedAt);
         }
 
         private void uxExitMenuItem_Click(object sender, EventArgs e)

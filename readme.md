@@ -98,4 +98,17 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `UIBackgroundColor` | color | 00FFFFFF | The background color for the window display. |
 | `Sizable` | bool | true | If the window is a normal sizable window. `false` looks better but is not recognized by OBS as a window. |
 | `LogFormat` | text | csv | The format to write to the LogFile. Only "csv" is valid. |
-| `LogFile` | text | *empty* | The full path of where to write the logged data to. If empty, no file log is kept. Example: `C:\users\joe\desktop\heartrate.csv`  |
+| `LogDateFormat` | text | OA | The format to write the date column as. See `Datetime formatting.` |
+| `LogFile` | text | *empty* | The full path of where to write the logged data to. If empty, no file log is kept. A `%date%` token can be included to substitute in the date. A custom formatter can be included, such as `%date:MM-dd-yyyy%` Example: `C:\users\joe\desktop\heartrate-%date%.csv`  |
+
+### Datetime formatting
+Datetime formatting is done using the standard C# syntax. One special exception
+is "OA" which will convert to an "OLE Automation Date" formatted date, which is
+useful for Excel.
+
+The default `LogFile` date formatter is `yyyy-MM-dd hh-mm tt`. The timestamp
+is taken at the startup time of the program.
+
+Documents about standard and custom datetime formatters:
+https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings
+https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings

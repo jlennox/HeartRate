@@ -42,7 +42,7 @@ namespace Lennox.HeartRate.Tests
                     var formThread = new Thread(_ =>
                     {
                         using (var form = new HeartRateForm(
-                            service, settingsFile))
+                            service, settingsFile, DateTime.Now))
                         {
                             form.Show();
                             mre.Wait();

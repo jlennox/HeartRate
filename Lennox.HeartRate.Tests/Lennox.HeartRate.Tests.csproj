@@ -50,6 +50,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DateTimeFormatterTests.cs" />
     <Compile Include="HeartRateFormTests.cs" />
     <Compile Include="TempFile.cs" />
     <Compile Include="SettingsTests.cs" />

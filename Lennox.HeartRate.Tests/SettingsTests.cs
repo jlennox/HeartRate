@@ -26,6 +26,7 @@ namespace Lennox.HeartRate.Tests
   <UIBackgroundColor>00FFFFFF</UIBackgroundColor>
   <Sizable>true</Sizable>
   <LogFormat>csv</LogFormat>
+  <LogDateFormat>OA</LogDateFormat>
   <LogFile> </LogFile>
 </HeartRateSettingsProtocol>";
 
