@@ -30,6 +30,7 @@ namespace HeartRate
         private readonly Stopwatch _alertTimeout = new Stopwatch();
         private readonly Stopwatch _disconnectedTimeout = new Stopwatch();
         private readonly DateTime _startedAt;
+        private readonly HeartRateServiceWatchdog _watchdog;
         private string _logfilename;
 
         private string _iconText;
@@ -75,6 +76,8 @@ namespace HeartRate
                 _measurementFont = new Font(
                     _settings.FontName, _iconWidth,
                     GraphicsUnit.Pixel);
+                _watchdog = new HeartRateServiceWatchdog(
+                    TimeSpan.FromSeconds(10), _service);
 
                 InitializeComponent();
 
@@ -278,6 +281,7 @@ namespace HeartRate
                     TryDispose(_iconGraphics);
                     TryDispose(_measurementFont);
                     TryDispose(_iconStringFormat);
+                    TryDispose(_watchdog);
                 }
             }
 

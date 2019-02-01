@@ -7,6 +7,7 @@ namespace Lennox.HeartRate.Tests
     internal class TestHeartRateService : IHeartRateService
     {
         private readonly TimeSpan _tickrate;
+        public bool IsDisposed { get; private set; }
         public event HeartRateService.HeartRateUpdateEventHandler HeartRateUpdated;
 
         public readonly int[] HeartRates = new[]
@@ -36,7 +37,12 @@ namespace Lennox.HeartRate.Tests
 
             lock (_sync)
             {
-                count = _count = _count++ % HeartRates.Length;
+                if (_count > HeartRates.Length)
+                {
+                    return;
+                }
+
+                count = _count = _count++;
             }
 
             HeartRateUpdated?.Invoke(
@@ -51,6 +57,7 @@ namespace Lennox.HeartRate.Tests
 
         public void Dispose()
         {
+            IsDisposed = true;
             _timer?.Dispose();
         }
     }

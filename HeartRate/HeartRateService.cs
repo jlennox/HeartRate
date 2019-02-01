@@ -20,15 +20,93 @@ namespace HeartRate
 
     internal interface IHeartRateService : IDisposable
     {
+        bool IsDisposed { get; }
+
         event HeartRateService.HeartRateUpdateEventHandler HeartRateUpdated;
         void InitiateDefault();
         void Cleanup();
+    }
+
+    internal class HeartRateServiceWatchdog : IDisposable
+    {
+        private readonly TimeSpan _timeout;
+        private readonly IHeartRateService _service;
+        private readonly Stopwatch _lastUpdateTimer = Stopwatch.StartNew();
+        private readonly object _sync = new object();
+        private bool _isDisposed = false;
+
+        public HeartRateServiceWatchdog(
+            TimeSpan timeout,
+            IHeartRateService service)
+        {
+            _timeout = timeout;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _service.HeartRateUpdated += _service_HeartRateUpdated;
+
+            var thread = new Thread(WatchdogThread)
+            {
+                Name = GetType().Name,
+                IsBackground = true
+            };
+
+            thread.Start();
+        }
+
+        private void _service_HeartRateUpdated(
+            ContactSensorStatus status, int bpm)
+        {
+            lock (_sync)
+            {
+                _lastUpdateTimer.Restart();
+            }
+        }
+
+        private void WatchdogThread()
+        {
+            while (!_isDisposed && !_service.IsDisposed)
+            {
+                var needsRefresh = false;
+                lock (_sync)
+                {
+                    if (_isDisposed)
+                    {
+                        return;
+                    }
+
+                    if (_lastUpdateTimer.Elapsed > _timeout)
+                    {
+                        needsRefresh = true;
+                        _lastUpdateTimer.Restart();
+                    }
+                }
+
+                if (needsRefresh)
+                {
+                    Debug.WriteLine("Restarting services...");
+                    _service.InitiateDefault();
+                }
+
+                Thread.Sleep(10000);
+            }
+
+            Debug.WriteLine("Watchdog thread exiting.");
+        }
+
+        public void Dispose()
+        {
+            lock (_sync)
+            {
+                _isDisposed = true;
+            }
+        }
     }
 
     internal class HeartRateService : IHeartRateService
     {
         // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml
         private const int _heartRateMeasurementCharacteristicId = 0x2A37;
+
+        public bool IsDisposed => _isDisposed;
 
         private GattDeviceService _service;
         private readonly object _disposeSync = new object();
