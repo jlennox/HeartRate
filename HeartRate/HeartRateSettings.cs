@@ -196,7 +196,7 @@ namespace HeartRate
                     $"Unable to read file {filename}");
             }
 
-            if (!File.Exists(filename))
+            if (!File.Exists(filename) || new FileInfo(filename).Length < 5)
             {
                 return null;
             }
@@ -215,7 +215,8 @@ namespace HeartRate
 
             var protocol = new HeartRateSettingsProtocol(settings);
 
-            using (var fs = File.OpenWrite(filename))
+            using (var fs = File.Open(filename,
+                FileMode.Create, FileAccess.Write))
             {
                 _serializer.Serialize(fs, protocol);
             }
