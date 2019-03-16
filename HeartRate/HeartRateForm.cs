@@ -210,11 +210,11 @@ namespace HeartRate
                         : _settings.UIColor;
                     uxBpmLabel.BackColor = _settings.UIBackgroundColor;
 
-                    var font = _settings.UIFontName;
+                    var fontx = _settings.UIFontName;
 
-                    if (uxBpmLabel.Font.FontFamily.Name != font)
+                    if (uxBpmLabel.Font.FontFamily.Name != fontx)
                     {
-                        UpdateLabelFont();
+                        UpdateLabelFontLocked();
                     }
                 }));
 
@@ -329,14 +329,19 @@ namespace HeartRate
         {
             lock (_updateSync)
             {
-                var newFont = new Font(
-                    _settings.UIFontName, uxBpmLabel.Height,
-                    GraphicsUnit.Pixel);
-
-                uxBpmLabel.Font = newFont;
-                TryDispose(_lastFont);
-                _lastFont = newFont;
+                UpdateLabelFontLocked();
             }
+        }
+
+        private void UpdateLabelFontLocked()
+        {
+            var newFont = new Font(
+                _settings.UIFontName, uxBpmLabel.Height,
+                GraphicsUnit.Pixel);
+
+            uxBpmLabel.Font = newFont;
+            TryDispose(_lastFont);
+            _lastFont = newFont;
         }
 
         private void uxMenuEditSettings_Click(object sender, EventArgs e)

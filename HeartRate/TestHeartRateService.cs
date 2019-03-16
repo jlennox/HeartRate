@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading;
-using HeartRate;
 
-namespace Lennox.HeartRate.Tests
+namespace HeartRate
 {
     internal class TestHeartRateService : IHeartRateService
     {
@@ -37,12 +36,12 @@ namespace Lennox.HeartRate.Tests
 
             lock (_sync)
             {
-                if (_count > HeartRates.Length)
+                count = _count = ++_count;
+
+                if (count >= HeartRates.Length)
                 {
                     return;
                 }
-
-                count = _count = _count++;
             }
 
             HeartRateUpdated?.Invoke(

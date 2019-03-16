@@ -64,6 +64,7 @@
     <Compile Include="HeartRateSettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestHeartRateService.cs" />
     <EmbeddedResource Include="HeartRateForm.resx">
       <DependentUpon>HeartRateForm.cs</DependentUpon>
     </EmbeddedResource>
