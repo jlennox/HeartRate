@@ -53,7 +53,9 @@ namespace HeartRate
         }
 
         public HeartRateForm() : this(
-            new HeartRateService(),
+            Environment.CommandLine.Contains("--test")
+                ? (IHeartRateService)new TestHeartRateService()
+                : new HeartRateService(),
             HeartRateSettings.GetFilename(),
             DateTime.Now)
         {
@@ -382,6 +384,118 @@ namespace HeartRate
         private void uxExitMenuItem_Click(object sender, EventArgs e)
         {
             Environment.Exit(0);
+        }
+
+        private bool TryPromptColor(Color current, out Color color)
+        {
+            color = default(Color);
+
+            using (var dlg = new ColorDialog())
+            {
+                dlg.Color = current;
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    color = dlg.Color;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool TryPromptFont(string current, out string font)
+        {
+            font = default(string);
+
+            using (var dlg = new FontDialog()
+            {
+                FontMustExist = true
+            })
+            {
+                using (dlg.Font = new Font(current, 10, GraphicsUnit.Pixel))
+                {
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        font = dlg.Font.Name;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private void editFontColorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (TryPromptColor(_settings.Color, out var color))
+            {
+                lock (_updateSync)
+                {
+                    _settings.Color = color;
+                    _settings.Save();
+                }
+            }
+        }
+
+        private void editIconFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (TryPromptColor(_settings.WarnColor, out var color))
+            {
+                lock (_updateSync)
+                {
+                    _settings.WarnColor = color;
+                    _settings.Save();
+                }
+            }
+        }
+
+        private void editWindowFontColorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (TryPromptColor(_settings.UIColor, out var color))
+            {
+                lock (_updateSync)
+                {
+                    _settings.UIColor = color;
+                    _settings.Save();
+                }
+            }
+        }
+
+        private void editWindowFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (TryPromptColor(_settings.UIWarnColor, out var color))
+            {
+                lock (_updateSync)
+                {
+                    _settings.UIWarnColor = color;
+                    _settings.Save();
+                }
+            }
+        }
+
+        private void selectIconFontToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (TryPromptFont(_settings.FontName, out var font))
+            {
+                lock (_updateSync)
+                {
+                    _settings.FontName = font;
+                    _settings.Save();
+                }
+            }
+        }
+
+        private void selectWindowFontToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (TryPromptFont(_settings.UIFontName, out var font))
+            {
+                lock (_updateSync)
+                {
+                    _settings.UIFontName = font;
+                    _settings.Save();
+                }
+            }
         }
     }
 }
