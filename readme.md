@@ -24,7 +24,9 @@ customizations needed by request.
 Change log
 ----------
 **1.4**
-Add LogFile/LogFormat settings for writing BPM log to file.
+* Added LogFile/LogFormat settings for writing BPM log to file.
+* Added system tray context menu for selecting colors/fonts.
+* Fixed (???) the issue with the heart rate recording could stop.
 
 Notice on deployment
 --------
