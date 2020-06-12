@@ -148,6 +148,12 @@ namespace HeartRate
                 _service = service;
             }
 
+            if (service == null)
+            {
+                throw new ArgumentOutOfRangeException(
+                    $"Unable to get service to {device.Name} ({device.Id}). Is the device inuse by another program? The Bluetooth adaptor may need to be turned off and on again.");
+            }
+
             var heartrate = service.GetCharacteristics(
                 GattDeviceService.ConvertShortIdToUuid(
                     _heartRateMeasurementCharacteristicId))

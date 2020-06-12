@@ -1,7 +1,7 @@
 Heart rate monitor
 ==================
 
-A lightweight program to display the heart rate reading from a 
+A lightweight program to display the heart rate reading from a
 [Bluetooth Low Energy device](https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml).
 
 This has only been tested on a [Polar H7](https://www.amazon.com/dp/B007S088F4) (non-referral link) but others should work.
@@ -98,6 +98,8 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `UIColor` | color | FF00008B | The default color for the window display. |
 | `UIWarnColor` | color | FFFF0000 | The window display color once `WarnLevel` has been met. |
 | `UIBackgroundColor` | color | 00FFFFFF | The background color for the window display. |
+| `UIBackgroundFile` | text | *empty* | The full path of a background image. |
+| `UIBackgroundLayout` | text | Stretch | The background image display layout. Possible values: `None`, `Tile`, `Center`, `Stretch`, and `Zoom`. [More information.](https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.imagelayout) |
 | `Sizable` | bool | true | If the window is a normal sizable window. `false` looks better but is not recognized by OBS as a window. |
 | `LogFormat` | text | csv | The format to write to the LogFile. Only "csv" is valid. |
 | `LogDateFormat` | text | OA | The format to write the date column as. See `Datetime formatting.` |

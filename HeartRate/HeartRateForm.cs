@@ -32,6 +32,7 @@ namespace HeartRate
         private readonly DateTime _startedAt;
         private readonly HeartRateServiceWatchdog _watchdog;
         private string _logfilename;
+        private HeartRateSettings _lastSettings;
 
         private string _iconText;
         private Font _lastFont;
@@ -218,6 +219,39 @@ namespace HeartRate
                     {
                         UpdateLabelFontLocked();
                     }
+
+                    if (_lastSettings?.UIBackgroundFile != _settings.UIBackgroundFile)
+                    {
+                        var oldBackgroundImage = uxBpmLabel.BackgroundImage;
+                        var backgroundFile = _settings.UIBackgroundFile;
+
+                        if (!string.IsNullOrWhiteSpace(backgroundFile) &&
+                            File.Exists(backgroundFile))
+                        {
+                            try
+                            {
+                                var image = Image.FromFile(backgroundFile);
+                                uxBpmLabel.BackgroundImage = image;
+                                TryDispose(oldBackgroundImage);
+                            }
+                            catch (Exception e)
+                            {
+                                MessageBox.Show($"Unable to load background image file \"{backgroundFile}\" due to error: {e}");
+                            }
+                        }
+                        else
+                        {
+                            uxBpmLabel.BackgroundImage = null;
+                            TryDispose(oldBackgroundImage);
+                        }
+                    }
+
+                    if (_lastSettings?.UIBackgroundLayout != _settings.UIBackgroundLayout)
+                    {
+                        uxBpmLabel.BackgroundImageLayout = _settings.UIBackgroundLayout;
+                    }
+
+                    _lastSettings = _settings.Clone();
                 }));
 
                 var iconHandle = _iconBitmap.GetHicon();
@@ -290,12 +324,9 @@ namespace HeartRate
             base.Dispose(disposing);
         }
 
-        private static void TryDispose(IDisposable disposable)
+        private static void TryDispose<T>(T disposable) where T : IDisposable
         {
-            if (disposable == null)
-            {
-                return;
-            }
+            if (disposable == null) return;
 
             try
             {
@@ -388,7 +419,7 @@ namespace HeartRate
 
         private bool TryPromptColor(Color current, out Color color)
         {
-            color = default(Color);
+            color = default;
 
             using (var dlg = new ColorDialog())
             {
@@ -406,7 +437,7 @@ namespace HeartRate
 
         private bool TryPromptFont(string current, out string font)
         {
-            font = default(string);
+            font = default;
 
             using (var dlg = new FontDialog()
             {
@@ -426,75 +457,110 @@ namespace HeartRate
             return false;
         }
 
-        private void editFontColorToolStripMenuItem_Click(object sender, EventArgs e)
+        private bool TryPromptFile(string current, string filter, out string file)
         {
-            if (TryPromptColor(_settings.Color, out var color))
+            file = default;
+
+            using (var dlg = new OpenFileDialog
             {
-                lock (_updateSync)
+                CheckFileExists = true,
+                FileName = current,
+                Filter = filter
+            })
+            {
+                if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    _settings.Color = color;
-                    _settings.Save();
+                    file = dlg.FileName;
+                    return true;
                 }
             }
+
+            return false;
+        }
+
+        private void updateSettingColor(ref Color settingColor)
+        {
+            if (!TryPromptColor(settingColor, out var color)) return;
+
+            lock (_updateSync)
+            {
+                settingColor = color;
+                _settings.Save();
+            }
+        }
+
+        private void editFontColorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            updateSettingColor(ref _settings.Color);
         }
 
         private void editIconFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (TryPromptColor(_settings.WarnColor, out var color))
-            {
-                lock (_updateSync)
-                {
-                    _settings.WarnColor = color;
-                    _settings.Save();
-                }
-            }
+            updateSettingColor(ref _settings.WarnColor);
         }
 
         private void editWindowFontColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (TryPromptColor(_settings.UIColor, out var color))
-            {
-                lock (_updateSync)
-                {
-                    _settings.UIColor = color;
-                    _settings.Save();
-                }
-            }
+            updateSettingColor(ref _settings.UIColor);
         }
 
         private void editWindowFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (TryPromptColor(_settings.UIWarnColor, out var color))
-            {
-                lock (_updateSync)
-                {
-                    _settings.UIWarnColor = color;
-                    _settings.Save();
-                }
-            }
+            updateSettingColor(ref _settings.UIWarnColor);
         }
 
         private void selectIconFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (TryPromptFont(_settings.FontName, out var font))
+            if (!TryPromptFont(_settings.FontName, out var font)) return;
+
+            lock (_updateSync)
             {
-                lock (_updateSync)
-                {
-                    _settings.FontName = font;
-                    _settings.Save();
-                }
+                _settings.FontName = font;
+                _settings.Save();
             }
         }
 
         private void selectWindowFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (TryPromptFont(_settings.UIFontName, out var font))
+            if (!TryPromptFont(_settings.UIFontName, out var font)) return;
+
+            lock (_updateSync)
             {
-                lock (_updateSync)
-                {
-                    _settings.UIFontName = font;
-                    _settings.Save();
-                }
+                _settings.UIFontName = font;
+                _settings.Save();
+            }
+        }
+
+        private void selectBackgroundImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!TryPromptFile(_settings.UIBackgroundFile, "Image files|*.bmp;*.gif;*.jpeg;*.png;*.tiff|All files (*.*)|*.*", out var file)) return;
+
+            lock (_updateSync)
+            {
+                _settings.UIBackgroundFile = file;
+                _settings.Save();
+            }
+        }
+
+        private void removeBackgroundImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (_updateSync)
+            {
+                _settings.UIBackgroundFile = null;
+                _settings.Save();
+            }
+        }
+
+        private void selectBackgroundLayoutToolStripMenuItem_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var text = selectBackgroundLayoutToolStripMenuItem.Text;
+
+            if (!Enum.TryParse<ImageLayout>(text, true, out var layout)) return;
+
+            lock (_updateSync)
+            {
+                _settings.UIBackgroundLayout = layout;
+                _settings.Save();
             }
         }
     }
