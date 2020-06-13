@@ -117,6 +117,8 @@ namespace HeartRate
             }
 
             _service.HeartRateUpdated += Service_HeartRateUpdated;
+
+            UpdateUI();
         }
 
         private void Service_HeartRateUpdated(
@@ -211,47 +213,8 @@ namespace HeartRate
                     uxBpmLabel.ForeColor = isWarn
                         ? _settings.UIWarnColor
                         : _settings.UIColor;
-                    uxBpmLabel.BackColor = _settings.UIBackgroundColor;
 
-                    var fontx = _settings.UIFontName;
-
-                    if (uxBpmLabel.Font.FontFamily.Name != fontx)
-                    {
-                        UpdateLabelFontLocked();
-                    }
-
-                    if (_lastSettings?.UIBackgroundFile != _settings.UIBackgroundFile)
-                    {
-                        var oldBackgroundImage = uxBpmLabel.BackgroundImage;
-                        var backgroundFile = _settings.UIBackgroundFile;
-
-                        if (!string.IsNullOrWhiteSpace(backgroundFile) &&
-                            File.Exists(backgroundFile))
-                        {
-                            try
-                            {
-                                var image = Image.FromFile(backgroundFile);
-                                uxBpmLabel.BackgroundImage = image;
-                                TryDispose(oldBackgroundImage);
-                            }
-                            catch (Exception e)
-                            {
-                                MessageBox.Show($"Unable to load background image file \"{backgroundFile}\" due to error: {e}");
-                            }
-                        }
-                        else
-                        {
-                            uxBpmLabel.BackgroundImage = null;
-                            TryDispose(oldBackgroundImage);
-                        }
-                    }
-
-                    if (_lastSettings?.UIBackgroundLayout != _settings.UIBackgroundLayout)
-                    {
-                        uxBpmLabel.BackgroundImageLayout = _settings.UIBackgroundLayout;
-                    }
-
-                    _lastSettings = _settings.Clone();
+                    UpdateUICore();
                 }));
 
                 var iconHandle = _iconBitmap.GetHicon();
@@ -302,6 +265,56 @@ namespace HeartRate
                     }
                 }
             }
+        }
+
+        private void UpdateUI()
+        {
+            Invoke(new Action(UpdateUICore));
+        }
+
+        private void UpdateUICore()
+        {
+            uxBpmLabel.BackColor = _settings.UIBackgroundColor;
+
+            var fontx = _settings.UIFontName;
+
+            if (uxBpmLabel.Font.FontFamily.Name != fontx)
+            {
+                UpdateLabelFontLocked();
+            }
+
+            if (_lastSettings?.UIBackgroundFile != _settings.UIBackgroundFile)
+            {
+                var oldBackgroundImage = uxBpmLabel.BackgroundImage;
+                var backgroundFile = _settings.UIBackgroundFile;
+
+                if (!string.IsNullOrWhiteSpace(backgroundFile) &&
+                    File.Exists(backgroundFile))
+                {
+                    try
+                    {
+                        var image = Image.FromFile(backgroundFile);
+                        uxBpmLabel.BackgroundImage = image;
+                        TryDispose(oldBackgroundImage);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show($"Unable to load background image file \"{backgroundFile}\" due to error: {e}");
+                    }
+                }
+                else
+                {
+                    uxBpmLabel.BackgroundImage = null;
+                    TryDispose(oldBackgroundImage);
+                }
+            }
+
+            if (_lastSettings?.UIBackgroundLayout != _settings.UIBackgroundLayout)
+            {
+                uxBpmLabel.BackgroundImageLayout = _settings.UIBackgroundLayout;
+            }
+
+            _lastSettings = _settings.Clone();
         }
 
         protected override void Dispose(bool disposing)
@@ -356,6 +369,7 @@ namespace HeartRate
         private void HeartRateForm_ResizeEnd(object sender, EventArgs e)
         {
             UpdateLabelFont();
+            UpdateUI();
         }
 
         private void UpdateLabelFont()
@@ -487,6 +501,8 @@ namespace HeartRate
                 settingColor = color;
                 _settings.Save();
             }
+
+            UpdateUI();
         }
 
         private void editFontColorToolStripMenuItem_Click(object sender, EventArgs e)
@@ -518,6 +534,8 @@ namespace HeartRate
                 _settings.FontName = font;
                 _settings.Save();
             }
+
+            UpdateUI();
         }
 
         private void selectWindowFontToolStripMenuItem_Click(object sender, EventArgs e)
@@ -529,6 +547,8 @@ namespace HeartRate
                 _settings.UIFontName = font;
                 _settings.Save();
             }
+
+            UpdateUI();
         }
 
         private void selectBackgroundImageToolStripMenuItem_Click(object sender, EventArgs e)
@@ -540,6 +560,8 @@ namespace HeartRate
                 _settings.UIBackgroundFile = file;
                 _settings.Save();
             }
+
+            UpdateUI();
         }
 
         private void removeBackgroundImageToolStripMenuItem_Click(object sender, EventArgs e)
@@ -549,6 +571,8 @@ namespace HeartRate
                 _settings.UIBackgroundFile = null;
                 _settings.Save();
             }
+
+            UpdateUI();
         }
 
         private void selectBackgroundLayoutToolStripMenuItem_SelectedIndexChanged(object sender, EventArgs e)
@@ -562,6 +586,8 @@ namespace HeartRate
                 _settings.UIBackgroundLayout = layout;
                 _settings.Save();
             }
+
+            UpdateUI();
         }
     }
 }
