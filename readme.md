@@ -5,6 +5,7 @@ A lightweight program to display the heart rate reading from a
 [Bluetooth Low Energy device](https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml).
 
 This has only been tested on a [Polar H7](https://www.amazon.com/dp/B007S088F4) (non-referral link) but others should work.
+Polar OH1 is reported as working.
 
 Requires Windows 8.1 or newer.
 
@@ -14,31 +15,36 @@ Motivation
 ----------
 I owned a Polar H7 I could not get to work with any iOS software for use in the
 gym. I decided to repurpose it as a way to read my heartrate while I worked on
-my computer. Having found no software, I decided to create my own.
+the computer. I create my own due to lack of available software.
 
-The program's secondary purpose is for Twitch streamers, because having looked
-into their setups, I found there was a mixture of excessive hardware and
-software needed. I am not a Twitch streamer and am willing to add the
-customizations needed by request.
+The program's secondary purpose is for Twitch streamers. After looking
+into streamer setups I saw an excessive mix of hardware and software was needed.
+I am not a Twitch streamer and **I am willing to add the customizations needed
+byrequest.**
 
 Change log
 ----------
+**1.5**
+* Added background image support (#10)
+* Made UI updates more responsive.
+* Made context menu available from right clicking form, also.
+
 **1.4**
 * Added LogFile/LogFormat settings for writing BPM log to file.
 * Added system tray context menu for selecting colors/fonts.
-* Fixed (???) the issue with the heart rate recording could stop.
+* Fixed (maybe?) the issue with the heart rate recording could stop.
 
 Notice on deployment
 --------
 Some builds of Windows 10 have bug related to security which causes Desktop
 apps to stop receiving notification callbacks from GATT characteristics after
-receiving a few initial callbacks. One may find more details in this post:
-https://social.msdn.microsoft.com/Forums/en-US/58da3fdb-a0e1-4161-8af3-778b6839f4e1/
+receiving a few initial callbacks. [More details available](https://social.msdn.microsoft.com/Forums/en-US/58da3fdb-a0e1-4161-8af3-778b6839f4e1/)
 or in similar posts on social.msdn.microsoft.com.
 
 There are several workarounds, the simplest being creating an AppId for the app in
 the Windows Registry and adding a security setting for the AppId, like below:
 
+```
 Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Classes\AppID\{C6BFD646-3DF0-4DE5-B7AF-5FFFACB844A5}]
@@ -53,7 +59,10 @@ Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Classes\AppID\YOURAPP.exe]
 "AppID"="{C6BFD646-3DF0-4DE5-B7AF-5FFFACB844A5}"
+```
 
+Wanting to remain lightweight and not having an installer, this is not handled
+automatically by the program.
 
 How to use
 ----------
