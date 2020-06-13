@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Windows.Forms;
 using System.Xml.Serialization;
 
 namespace HeartRate
@@ -16,22 +17,24 @@ namespace HeartRate
         // See note in Load for how to version the file.
         private const int _settingsVersion = 1;
 
-        public int Version { get; set; }
-        public string FontName { get; set; }
-        public string UIFontName { get; set; }
-        public int AlertLevel { get; set; }
-        public int WarnLevel { get; set; }
-        public TimeSpan AlertTimeout { get; set; }
-        public TimeSpan DisconnectedTimeout { get; set; }
-        public Color Color { get; set; }
-        public Color WarnColor { get; set; }
-        public Color UIColor { get; set; }
-        public Color UIWarnColor { get; set; }
-        public Color UIBackgroundColor { get; set; }
-        public bool Sizable { get; set; }
-        public string LogFormat { get; set; }
-        public string LogDateFormat { get; set; }
-        public string LogFile { get; set; }
+        public int Version;
+        public string FontName;
+        public string UIFontName;
+        public int AlertLevel;
+        public int WarnLevel;
+        public TimeSpan AlertTimeout;
+        public TimeSpan DisconnectedTimeout;
+        public Color Color;
+        public Color WarnColor;
+        public Color UIColor;
+        public Color UIWarnColor;
+        public Color UIBackgroundColor;
+        public string UIBackgroundFile;
+        public ImageLayout UIBackgroundLayout;
+        public bool Sizable;
+        public string LogFormat;
+        public string LogDateFormat;
+        public string LogFile;
 
         public HeartRateSettings(string filename)
         {
@@ -53,6 +56,8 @@ namespace HeartRate
                 UIColor = Color.DarkBlue,
                 UIWarnColor = Color.Red,
                 UIBackgroundColor = Color.Transparent,
+                UIBackgroundFile = null,
+                UIBackgroundLayout = ImageLayout.Stretch,
                 Sizable = true,
                 LogFormat = "csv",
                 LogDateFormat = DateTimeFormatter.DefaultColumn,
@@ -85,6 +90,10 @@ namespace HeartRate
             UIColor = ColorFromString(protocol.UIColor);
             UIWarnColor = ColorFromString(protocol.UIWarnColor);
             UIBackgroundColor = ColorFromString(protocol.UIBackgroundColor);
+            UIBackgroundFile = protocol.UIBackgroundFile;
+            UIBackgroundLayout = Enum.TryParse<ImageLayout>(
+                    protocol.UIBackgroundLayout, true, out var layout)
+                ? layout : ImageLayout.Stretch;
             Sizable = protocol.Sizable;
             LogFormat = protocol.LogFormat;
             LogDateFormat = protocol.LogDateFormat;
@@ -92,6 +101,31 @@ namespace HeartRate
 
             // In the future:
             // if (protocol.Version >= 2) ...
+        }
+
+        public HeartRateSettings Clone()
+        {
+            return new HeartRateSettings(_filename)
+            {
+                Version = Version,
+                FontName = FontName,
+                UIFontName = UIFontName,
+                AlertLevel = AlertLevel,
+                WarnLevel = WarnLevel,
+                AlertTimeout = AlertTimeout,
+                DisconnectedTimeout = DisconnectedTimeout,
+                Color = Color,
+                WarnColor = WarnColor,
+                UIColor = UIColor,
+                UIWarnColor = UIWarnColor,
+                UIBackgroundColor = UIBackgroundColor,
+                UIBackgroundFile = UIBackgroundFile,
+                UIBackgroundLayout = UIBackgroundLayout,
+                Sizable = Sizable,
+                LogFormat = LogFormat,
+                LogDateFormat = LogDateFormat,
+                LogFile = LogFile,
+            };
         }
 
         private static Color ColorFromString(string s)
@@ -151,6 +185,8 @@ namespace HeartRate
         public string UIColor { get; set; }
         public string UIWarnColor { get; set; }
         public string UIBackgroundColor { get; set; }
+        public string UIBackgroundFile { get; set; }
+        public string UIBackgroundLayout { get; set; }
         public bool Sizable { get; set; }
         public string LogFormat { get; set; }
         public string LogDateFormat { get; set; }
@@ -175,6 +211,8 @@ namespace HeartRate
             UIColor = ColorToString(settings.UIColor);
             UIWarnColor = ColorToString(settings.UIWarnColor);
             UIBackgroundColor = ColorToString(settings.UIBackgroundColor);
+            UIBackgroundFile = settings.UIBackgroundFile;
+            UIBackgroundLayout = settings.UIBackgroundLayout.ToString();
             Sizable = settings.Sizable;
             LogFormat = settings.LogFormat;
             LogDateFormat = settings.LogDateFormat ?? DateTimeFormatter.DefaultColumn;
