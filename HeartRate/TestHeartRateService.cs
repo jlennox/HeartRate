@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 
 namespace HeartRate
@@ -9,8 +10,10 @@ namespace HeartRate
         public bool IsDisposed { get; private set; }
         public event HeartRateService.HeartRateUpdateEventHandler HeartRateUpdated;
 
-        public readonly int[] HeartRates = new[]
-            { 10, 20, 30, 40, 50, 60, 70, 80, 90, 99 };
+        public readonly HeartRateReading[] HeartRates = (new[]
+            { 10, 20, 30, 40, 50, 60, 70, 80, 90, 99 })
+            .Select(t => new HeartRateReading { BeatsPerMinute = t })
+            .ToArray();
 
         private Timer _timer;
         private int _count;

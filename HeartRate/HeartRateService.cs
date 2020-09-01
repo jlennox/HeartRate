@@ -53,7 +53,7 @@ namespace HeartRate
         }
 
         private void _service_HeartRateUpdated(
-            ContactSensorStatus status, int bpm)
+            ContactSensorStatus status, HeartRateReading reading)
         {
             lock (_sync)
             {
@@ -101,6 +101,13 @@ namespace HeartRate
         }
     }
 
+    internal struct HeartRateReading
+    {
+        public int BeatsPerMinute { get; set; }
+        public int? EnergyExpended { get; set; }
+        public int[] RRIntervals { get; set; }
+    }
+
     internal class HeartRateService : IHeartRateService
     {
         // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml
@@ -113,7 +120,7 @@ namespace HeartRate
         private bool _isDisposed;
 
         public event HeartRateUpdateEventHandler HeartRateUpdated;
-        public delegate void HeartRateUpdateEventHandler(ContactSensorStatus status, int bpm);
+        public delegate void HeartRateUpdateEventHandler(ContactSensorStatus status, HeartRateReading reading);
 
         public void InitiateDefault()
         {
@@ -180,17 +187,15 @@ namespace HeartRate
         {
             var value = args.CharacteristicValue;
 
-            if (value.Length == 0)
-            {
-                return;
-            }
+            if (value.Length == 0) return;
 
             using (var reader = DataReader.FromBuffer(value))
             {
-                var bpm = -1;
                 var flags = reader.ReadByte();
                 var isshort = (flags & 1) == 1;
                 var contactSensor = (ContactSensorStatus)((flags >> 1) & 3);
+                var hasEnergyExpended = (flags & (1 << 3)) != 0;
+                var hasRRInterval = (flags & (1 << 4)) != 0;
                 var minLength = isshort ? 3 : 2;
 
                 if (value.Length < minLength)
@@ -199,16 +204,37 @@ namespace HeartRate
                     return;
                 }
 
+                var reading = new HeartRateReading();
+                var nread = minLength;
+
                 if (value.Length > 1)
                 {
-                    bpm = isshort
+                    reading.BeatsPerMinute = isshort
                         ? reader.ReadUInt16()
                         : reader.ReadByte();
                 }
 
-                Debug.WriteLine($"Read {flags:X} {contactSensor} {bpm}");
+                if (hasEnergyExpended)
+                {
+                    nread += 2;
+                    reading.EnergyExpended = reader.ReadUInt16();
+                }
 
-                HeartRateUpdated?.Invoke(contactSensor, bpm);
+                if (hasRRInterval)
+                {
+                    var rrvalueCount = value.Length - nread;
+                    var rrvalues = new int[rrvalueCount];
+                    for (var i = 0; i < rrvalueCount; ++i)
+                    {
+                        rrvalues[i] = reader.ReadByte();
+                    }
+
+                    reading.RRIntervals = rrvalues;
+                }
+
+                Debug.WriteLine($"Read {flags:X} {contactSensor} {reading.BeatsPerMinute}");
+
+                HeartRateUpdated?.Invoke(contactSensor, reading);
             }
         }
 

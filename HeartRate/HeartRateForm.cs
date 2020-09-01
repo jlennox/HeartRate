@@ -123,7 +123,7 @@ namespace HeartRate
 
         private void Service_HeartRateUpdated(
             ContactSensorStatus status,
-            int bpm)
+            HeartRateReading reading)
         {
             try
             {
@@ -131,13 +131,13 @@ namespace HeartRate
                 {
                     for (var i = 0; i < 4000; ++i)
                     {
-                        Service_HeartRateUpdatedCore(status, bpm);
+                        Service_HeartRateUpdatedCore(status, reading);
                     }
 
                     return;
                 }
 
-                Service_HeartRateUpdatedCore(status, bpm);
+                Service_HeartRateUpdatedCore(status, reading);
             }
             catch (Exception ex)
             {
@@ -149,8 +149,10 @@ namespace HeartRate
 
         private void Service_HeartRateUpdatedCore(
             ContactSensorStatus status,
-            int bpm)
+            HeartRateReading reading)
         {
+            var bpm = reading.BeatsPerMinute;
+
             var isDisconnected = bpm == 0 ||
                 status == ContactSensorStatus.NoContact;
 
@@ -255,7 +257,7 @@ namespace HeartRate
                     switch ((_settings.LogFormat ?? "").ToLower())
                     {
                         case "csv":
-                            data = $"{dateString},{bpm},{status}\r\n";
+                            data = $"{dateString},{bpm},{status},{reading.EnergyExpended},{(reading.RRIntervals == null ? "" : string.Join(",", reading.RRIntervals))}\r\n";
                             break;
                     }
 
