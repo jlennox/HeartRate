@@ -129,7 +129,7 @@ namespace HeartRate
         public bool IsDisposed => _isDisposed;
 
         private GattDeviceService _service;
-        private byte[] _buffer = new byte[256];
+        private byte[] _buffer;
         private readonly object _disposeSync = new object();
         private bool _isDisposed;
 
@@ -202,7 +202,12 @@ namespace HeartRate
             if (buffer.Length == 0) return;
 
             var byteBuffer = Interlocked.Exchange(ref _buffer, null)
-                ?? new byte[256];
+                ?? new byte[buffer.Length];
+
+            if (byteBuffer.Length != buffer.Length)
+            {
+                byteBuffer = new byte[buffer.Length];
+            }
 
             try
             {
@@ -230,6 +235,8 @@ namespace HeartRate
 
         internal static HeartRateReading? ReadBuffer(byte[] buffer, int length)
         {
+            if (length == 0) return null;
+
             var ms = new MemoryStream(buffer, 0, length);
             var flags = (HeartRateFlags)ms.ReadByte();
             var isshort = flags.HasFlag(HeartRateFlags.IsShort);
@@ -243,23 +250,14 @@ namespace HeartRate
                 return (ushort)(ms.ReadByte() | (ms.ReadByte() << 8));
             }
 
-            if (buffer.Length < minLength)
-            {
-                return null;
-            }
+            if (buffer.Length < minLength) return null;
 
             var reading = new HeartRateReading
             {
                 Flags = flags,
-                Status = contactSensor
+                Status = contactSensor,
+                BeatsPerMinute = isshort ? ReadUInt16() : ms.ReadByte()
             };
-
-            if (buffer.Length > 1)
-            {
-                reading.BeatsPerMinute = isshort
-                    ? ReadUInt16()
-                    : ms.ReadByte();
-            }
 
             if (hasEnergyExpended)
             {
