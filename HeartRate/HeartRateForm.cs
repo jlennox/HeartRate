@@ -121,9 +121,7 @@ namespace HeartRate
             UpdateUI();
         }
 
-        private void Service_HeartRateUpdated(
-            ContactSensorStatus status,
-            HeartRateReading reading)
+        private void Service_HeartRateUpdated(HeartRateReading reading)
         {
             try
             {
@@ -131,13 +129,13 @@ namespace HeartRate
                 {
                     for (var i = 0; i < 4000; ++i)
                     {
-                        Service_HeartRateUpdatedCore(status, reading);
+                        Service_HeartRateUpdatedCore(reading);
                     }
 
                     return;
                 }
 
-                Service_HeartRateUpdatedCore(status, reading);
+                Service_HeartRateUpdatedCore(reading);
             }
             catch (Exception ex)
             {
@@ -147,11 +145,10 @@ namespace HeartRate
             }
         }
 
-        private void Service_HeartRateUpdatedCore(
-            ContactSensorStatus status,
-            HeartRateReading reading)
+        private void Service_HeartRateUpdatedCore(HeartRateReading reading)
         {
             var bpm = reading.BeatsPerMinute;
+            var status = reading.Status;
 
             var isDisconnected = bpm == 0 ||
                 status == ContactSensorStatus.NoContact;

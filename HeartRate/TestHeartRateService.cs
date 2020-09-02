@@ -12,7 +12,10 @@ namespace HeartRate
 
         public readonly HeartRateReading[] HeartRates = (new[]
             { 10, 20, 30, 40, 50, 60, 70, 80, 90, 99 })
-            .Select(t => new HeartRateReading { BeatsPerMinute = t })
+            .Select(t => new HeartRateReading {
+                BeatsPerMinute = t,
+                Status = ContactSensorStatus.Contact
+            })
             .ToArray();
 
         private Timer _timer;
@@ -47,9 +50,7 @@ namespace HeartRate
                 }
             }
 
-            HeartRateUpdated?.Invoke(
-                ContactSensorStatus.Contact,
-                HeartRates[count]);
+            HeartRateUpdated?.Invoke(HeartRates[count]);
         }
 
         public void Cleanup()
