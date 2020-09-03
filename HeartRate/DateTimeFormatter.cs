@@ -1,22 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace HeartRate
 {
     internal static class DateTimeFormatter
     {
+        public const string DefaultFilename = "yyyy-MM-dd hh-mm tt";
+        public const string DefaultColumn = "OA";
+
         private static readonly Regex _tokenExp = new Regex(
             @"%date(?::([^%]+))?%",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        public const string DefaultFilename = "yyyy-MM-dd hh-mm tt";
-        public const string DefaultColumn = "OA";
+        private static readonly HashSet<char> _invalidFileNameChars =
+            Path.GetInvalidFileNameChars().ToHashSet();
 
         public static string FormatStringTokens(
             string input, DateTime datetime,
-            string defaultFormat = DefaultFilename)
+            string defaultFormat = DefaultFilename,
+            bool forFilepath = false)
         {
-            return _tokenExp.Replace(input, match =>
+            var formated = _tokenExp.Replace(input, match =>
             {
                 var formatter = match.Groups.Count > 0
                     ? match.Groups[1].Value
@@ -24,8 +31,16 @@ namespace HeartRate
 
                 return Format(formatter, datetime, defaultFormat);
             });
+
+            return forFilepath ? SanatizePath(formated) : formated;
         }
 
+        private static string SanatizePath(string path)
+        {
+            return new string(path
+                .Select(t => _invalidFileNameChars.Contains(t) ? '-' : t)
+                .ToArray());
+        }
 
         public static string Format(
             string formatter, DateTime datetime, string defaultFormat)
@@ -34,9 +49,9 @@ namespace HeartRate
                 ? defaultFormat
                 : formatter;
 
-            switch ((formatter ?? "").ToLowerInvariant())
+            switch ((formatter ?? "").ToUpperInvariant())
             {
-                case "oa": return datetime.ToOADate().ToString();
+                case "OA": return datetime.ToOADate().ToString();
             }
 
             return datetime.ToString(formatter);

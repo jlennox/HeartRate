@@ -7,18 +7,21 @@ namespace Lennox.HeartRate.Tests
     [TestClass]
     public class DateTimeFormatterTests
     {
+        private readonly DateTime _dt = new DateTime(1990, 12, 25, 1, 2, 20);
+
+        private void AssertOutput(
+            string input, string expected,
+            bool forFilepath = false)
+        {
+            var actual = DateTimeFormatter.FormatStringTokens(
+                input, _dt, forFilepath: forFilepath);
+
+            Assert.AreEqual(expected, actual);
+        }
+
         [TestMethod]
         public void TokenParserExcahngesTokens()
         {
-            var dt = new DateTime(1990, 12, 25, 1, 2, 20);
-
-            void AssertOutput(string input, string expected)
-            {
-                var actual = DateTimeFormatter.FormatStringTokens(input, dt);
-
-                Assert.AreEqual(expected, actual);
-            }
-
             AssertOutput("No tokens", "No tokens");
 
             AssertOutput(
@@ -32,6 +35,18 @@ namespace Lennox.HeartRate.Tests
             AssertOutput(
                 "Token at end %date:MM-dd-yyyy%",
                 "Token at end 12-25-1990");
+        }
+
+        [TestMethod]
+        public void SanatizesFilenames()
+        {
+            AssertOutput(
+                "Token at end %date:MM:dd:yyyy%",
+                "Token at end 12:25:1990", false);
+
+            AssertOutput(
+                "Token at end %date:MM:dd:yyyy%",
+                "Token at end 12-25-1990", true);
         }
     }
 }

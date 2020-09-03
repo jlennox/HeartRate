@@ -113,6 +113,7 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `LogFormat` | text | csv | The format to write to the LogFile. Only "csv" is valid. |
 | `LogDateFormat` | text | OA | The format to write the date column as. See `Datetime formatting.` |
 | `LogFile` | text | *empty* | The full path of where to write the logged data to. If empty, no file log is kept. A `%date%` token can be included to substitute in the date. A custom formatter can be included, such as `%date:MM-dd-yyyy%` Example: `C:\users\joe\desktop\heartrate-%date%.csv`  |
+| `IBIFile` | text | *empty* | The full path of where to write the IBI data to. Writes log of RR-Intervals in milliseconds in IBI supported file format. Supports date syntax like `LogFile` does. |
 
 ### Datetime formatting
 Datetime formatting is done using the standard C# syntax. One special exception

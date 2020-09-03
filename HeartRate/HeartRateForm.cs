@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -31,7 +32,8 @@ namespace HeartRate
         private readonly Stopwatch _disconnectedTimeout = new Stopwatch();
         private readonly DateTime _startedAt;
         private readonly HeartRateServiceWatchdog _watchdog;
-        private string _logfilename;
+        private string _logFilename;
+        private string _ibiFilename;
         private HeartRateSettings _lastSettings;
 
         private string _iconText;
@@ -90,7 +92,7 @@ namespace HeartRate
             }
             catch
             {
-                TryDispose(service);
+                service.TryDispose();
                 throw;
             }
         }
@@ -242,7 +244,7 @@ namespace HeartRate
 
                 _oldIconHandle = iconHandle;
 
-                if (_logfilename != null)
+                if (_logFilename != null)
                 {
                     string data = null;
 
@@ -260,8 +262,16 @@ namespace HeartRate
 
                     if (data != null)
                     {
-                        File.AppendAllText(_settings.LogFile, data);
+                        File.AppendAllText(_logFilename, data);
                     }
+                }
+
+                if (_ibiFilename != null && reading.RRIntervals?.Length > 0)
+                {
+                    var asMilliseconds = reading.RRIntervals
+                        .Select(t => ((int)Math.Round(t / 1024d, 0)).ToString());
+
+                    File.AppendAllLines(_ibiFilename, asMilliseconds);
                 }
             }
         }
@@ -294,7 +304,7 @@ namespace HeartRate
                     {
                         var image = Image.FromFile(backgroundFile);
                         uxBpmLabel.BackgroundImage = image;
-                        TryDispose(oldBackgroundImage);
+                        oldBackgroundImage.TryDispose();
                     }
                     catch (Exception e)
                     {
@@ -304,7 +314,7 @@ namespace HeartRate
                 else
                 {
                     uxBpmLabel.BackgroundImage = null;
-                    TryDispose(oldBackgroundImage);
+                    oldBackgroundImage.TryDispose();
                 }
             }
 
@@ -320,31 +330,20 @@ namespace HeartRate
         {
             if (disposing)
             {
-                TryDispose(components);
+                components.TryDispose();
 
                 lock (_disposeSync)
                 {
-                    TryDispose(_service);
-                    TryDispose(_iconBitmap);
-                    TryDispose(_iconGraphics);
-                    TryDispose(_measurementFont);
-                    TryDispose(_iconStringFormat);
-                    TryDispose(_watchdog);
+                    _service.TryDispose();
+                    _iconBitmap.TryDispose();
+                    _iconGraphics.TryDispose();
+                    _measurementFont.TryDispose();
+                    _iconStringFormat.TryDispose();
+                    _watchdog.TryDispose();
                 }
             }
 
             base.Dispose(disposing);
-        }
-
-        private static void TryDispose<T>(T disposable) where T : IDisposable
-        {
-            if (disposable == null) return;
-
-            try
-            {
-                disposable.Dispose();
-            }
-            catch { }
         }
 
         private void uxBpmNotifyIcon_MouseClick(object sender, MouseEventArgs e)
@@ -386,7 +385,7 @@ namespace HeartRate
                 GraphicsUnit.Pixel);
 
             uxBpmLabel.Font = newFont;
-            TryDispose(_lastFont);
+            _lastFont.TryDispose();
             _lastFont = newFont;
         }
 
@@ -418,11 +417,16 @@ namespace HeartRate
         {
             _settings.Load();
 
-            var logfile = _settings.LogFile;
+            _logFilename = GetFilename(_settings.LogFile);
+            _ibiFilename = GetFilename(_settings.IBIFile);
+        }
 
-            _logfilename = string.IsNullOrWhiteSpace(logfile)
+        private string GetFilename(string inputFilename)
+        {
+            return string.IsNullOrWhiteSpace(inputFilename)
                 ? null
-                : DateTimeFormatter.FormatStringTokens(logfile, _startedAt);
+                : DateTimeFormatter.FormatStringTokens(
+                    inputFilename, _startedAt, forFilepath: true);
         }
 
         private void uxExitMenuItem_Click(object sender, EventArgs e)
