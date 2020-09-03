@@ -5,7 +5,7 @@ A lightweight program to display the heart rate reading from a
 [Bluetooth Low Energy device](https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml).
 
 This has only been tested on a [Polar H7](https://www.amazon.com/dp/B007S088F4) (non-referral link) but others should work.
-Polar OH1 is reported as working.
+Polar OH1 and Polar 10 are reported as working.
 
 Requires Windows 8.1 or newer.
 
@@ -19,17 +19,22 @@ the computer. I create my own due to lack of available software.
 
 The program's secondary purpose is for Twitch streamers. After looking
 into streamer setups I saw an excessive mix of hardware and software was needed.
-I am not a Twitch streamer and **I am willing to add the customizations needed
+I am not a Twitch streamer but **I am willing to add the customizations needed
 byrequest.**
 
 Change log
 ----------
-**1.5**
+**1.6**
+* Added support for Energy Expended and RR-Intervals readings writing to logfile.
+* Added support for IBI file output.
+* Fixed logfiles containing date variables not working correctly.
+
+**1.5** June 13th, 2020
 * Added background image support (#10)
 * Made UI updates more responsive.
 * Made context menu available from right clicking form, also.
 
-**1.4**
+**1.4** April 27th, 2019 ·
 * Added LogFile/LogFormat settings for writing BPM log to file.
 * Added system tray context menu for selecting colors/fonts.
 * Fixed (maybe?) the issue with the heart rate recording could stop.
