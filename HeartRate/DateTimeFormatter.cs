@@ -19,23 +19,23 @@ namespace HeartRate
             Path.GetInvalidFileNameChars().ToHashSet();
 
         public static string FormatStringTokens(
-            string input, DateTime datetime,
+            string input,
+            DateTime datetime,
             string defaultFormat = DefaultFilename,
             bool forFilepath = false)
         {
-            var formated = _tokenExp.Replace(input, match =>
+            return _tokenExp.Replace(input, match =>
             {
                 var formatter = match.Groups.Count > 0
                     ? match.Groups[1].Value
                     : null;
 
-                return Format(formatter, datetime, defaultFormat);
+                var formated = Format(formatter, datetime, defaultFormat);
+                return forFilepath ? SanatizePath(formated) : formated;
             });
-
-            return forFilepath ? SanatizePath(formated) : formated;
         }
 
-        private static string SanatizePath(string path)
+        internal static string SanatizePath(string path)
         {
             return new string(path
                 .Select(t => _invalidFileNameChars.Contains(t) ? '-' : t)
@@ -43,7 +43,9 @@ namespace HeartRate
         }
 
         public static string Format(
-            string formatter, DateTime datetime, string defaultFormat)
+            string formatter,
+            DateTime datetime,
+            string defaultFormat)
         {
             formatter = string.IsNullOrWhiteSpace(formatter)
                 ? defaultFormat

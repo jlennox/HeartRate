@@ -40,13 +40,17 @@ namespace Lennox.HeartRate.Tests
         [TestMethod]
         public void SanatizesFilenames()
         {
+            // If it's not set to be for a filepath, the inclusion of invalid
+            // characters is not escaped.
             AssertOutput(
-                "Token at end %date:MM:dd:yyyy%",
-                "Token at end 12:25:1990", false);
+                @"C:\foo\bar\test-%date:MM:dd:yyyy%",
+                @"C:\foo\bar\test-12:25:1990", false);
 
+            // But if it's marked as being for a file, then invalid filename
+            // characters are scaped to dashes.
             AssertOutput(
-                "Token at end %date:MM:dd:yyyy%",
-                "Token at end 12-25-1990", true);
+                @"C:\foo\bar\test-%date:MM:dd:yyyy%",
+                @"C:\foo\bar\test-12-25-1990", true);
         }
     }
 }
