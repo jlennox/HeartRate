@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="DateTimeFormatter.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="FileWriters.cs" />
     <Compile Include="HeartRateForm.cs">
       <SubType>Form</SubType>
     </Compile>

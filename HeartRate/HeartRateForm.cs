@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -32,8 +31,8 @@ namespace HeartRate
         private readonly Stopwatch _disconnectedTimeout = new Stopwatch();
         private readonly DateTime _startedAt;
         private readonly HeartRateServiceWatchdog _watchdog;
-        private string _logFilename;
-        private string _ibiFilename;
+        private LogFile _log;
+        private IBIFile _ibi;
         private HeartRateSettings _lastSettings;
 
         private string _iconText;
@@ -149,6 +148,9 @@ namespace HeartRate
 
         private void Service_HeartRateUpdatedCore(HeartRateReading reading)
         {
+            _log?.Reading(reading);
+            _ibi?.Reading(reading);
+
             var bpm = reading.BeatsPerMinute;
             var status = reading.Status;
 
@@ -243,36 +245,6 @@ namespace HeartRate
                 }
 
                 _oldIconHandle = iconHandle;
-
-                if (_logFilename != null)
-                {
-                    string data = null;
-
-                    var dateString = DateTimeFormatter.Format(
-                        _settings.LogDateFormat,
-                        DateTime.Now,
-                        DateTimeFormatter.DefaultColumn);
-
-                    switch ((_settings.LogFormat ?? "").ToLower())
-                    {
-                        case "csv":
-                            data = $"{dateString},{bpm},{status},{reading.EnergyExpended},{(reading.RRIntervals == null ? "" : string.Join(",", reading.RRIntervals))}\r\n";
-                            break;
-                    }
-
-                    if (data != null)
-                    {
-                        File.AppendAllText(_logFilename, data);
-                    }
-                }
-
-                if (_ibiFilename != null && reading.RRIntervals?.Length > 0)
-                {
-                    var asMilliseconds = reading.RRIntervals
-                        .Select(t => ((int)Math.Round(t / 1024d, 0)).ToString());
-
-                    File.AppendAllLines(_ibiFilename, asMilliseconds);
-                }
             }
         }
 
@@ -417,8 +389,8 @@ namespace HeartRate
         {
             _settings.Load();
 
-            _logFilename = GetFilename(_settings.LogFile);
-            _ibiFilename = GetFilename(_settings.IBIFile);
+            _log = new LogFile(_settings, GetFilename(_settings.LogFile));
+            _ibi = new IBIFile(GetFilename(_settings.IBIFile));
         }
 
         private string GetFilename(string inputFilename)

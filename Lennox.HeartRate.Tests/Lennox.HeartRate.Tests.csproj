@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DateTimeFormatterTests.cs" />
+    <Compile Include="FileWriterTests.cs" />
     <Compile Include="HeartRateFormTests.cs" />
     <Compile Include="HeartRateServiceTests.cs" />
     <Compile Include="TempFile.cs" />
