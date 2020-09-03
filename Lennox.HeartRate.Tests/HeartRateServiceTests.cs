@@ -39,5 +39,15 @@ namespace Lennox.HeartRate.Tests
             CollectionAssert.AreEqual(new[] { 0x0403, 0x0605 }, GetRR(0b10001, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06));
             CollectionAssert.AreEqual(new[] { 0x0403 }, GetRR(0b10000, 0x12, 0x03, 0x04, 0x05));
         }
+
+        [TestMethod]
+        public void EverythingWorksTogether()
+        {
+            var reading = GetReading(0b11001, 0x01, 0x02, 0x22, 0x33, 0x03, 0x04, 0x05, 0x06).Value;
+
+            Assert.AreEqual(0x0201, reading.BeatsPerMinute);
+            Assert.AreEqual(0x3322, reading.EnergyExpended);
+            CollectionAssert.AreEqual(new[] { 0x0403, 0x0605 }, reading.RRIntervals);
+        }
     }
 }

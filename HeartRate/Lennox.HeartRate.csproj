@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DateTimeFormatter.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="HeartRateForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -63,6 +64,7 @@
       <DependentUpon>HeartRateForm.cs</DependentUpon>
     </Compile>
     <Compile Include="HeartRateService.cs" />
+    <Compile Include="HeartRateServiceWatchdog.cs" />
     <Compile Include="HeartRateSettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

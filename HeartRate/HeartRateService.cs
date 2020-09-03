@@ -3,102 +3,18 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
-using Windows.Foundation;
 using Windows.Storage.Streams;
 
 namespace HeartRate
 {
-    enum ContactSensorStatus
+    internal enum ContactSensorStatus
     {
         NotSupported,
         NotSupported2,
         NoContact,
         Contact
-    }
-
-    internal interface IHeartRateService : IDisposable
-    {
-        bool IsDisposed { get; }
-
-        event HeartRateService.HeartRateUpdateEventHandler HeartRateUpdated;
-        void InitiateDefault();
-        void Cleanup();
-    }
-
-    internal class HeartRateServiceWatchdog : IDisposable
-    {
-        private readonly TimeSpan _timeout;
-        private readonly IHeartRateService _service;
-        private readonly Stopwatch _lastUpdateTimer = Stopwatch.StartNew();
-        private readonly object _sync = new object();
-        private bool _isDisposed = false;
-
-        public HeartRateServiceWatchdog(
-            TimeSpan timeout,
-            IHeartRateService service)
-        {
-            _timeout = timeout;
-            _service = service ?? throw new ArgumentNullException(nameof(service));
-            _service.HeartRateUpdated += _service_HeartRateUpdated;
-
-            var thread = new Thread(WatchdogThread)
-            {
-                Name = GetType().Name,
-                IsBackground = true
-            };
-
-            thread.Start();
-        }
-
-        private void _service_HeartRateUpdated(HeartRateReading reading)
-        {
-            lock (_sync)
-            {
-                _lastUpdateTimer.Restart();
-            }
-        }
-
-        private void WatchdogThread()
-        {
-            while (!_isDisposed && !_service.IsDisposed)
-            {
-                var needsRefresh = false;
-                lock (_sync)
-                {
-                    if (_isDisposed)
-                    {
-                        return;
-                    }
-
-                    if (_lastUpdateTimer.Elapsed > _timeout)
-                    {
-                        needsRefresh = true;
-                        _lastUpdateTimer.Restart();
-                    }
-                }
-
-                if (needsRefresh)
-                {
-                    Debug.WriteLine("Restarting services...");
-                    _service.InitiateDefault();
-                }
-
-                Thread.Sleep(10000);
-            }
-
-            Debug.WriteLine("Watchdog thread exiting.");
-        }
-
-        public void Dispose()
-        {
-            lock (_sync)
-            {
-                _isDisposed = true;
-            }
-        }
     }
 
     [Flags]
@@ -117,6 +33,15 @@ namespace HeartRate
         public int BeatsPerMinute { get; set; }
         public int? EnergyExpended { get; set; }
         public int[] RRIntervals { get; set; }
+    }
+
+    internal interface IHeartRateService : IDisposable
+    {
+        bool IsDisposed { get; }
+
+        event HeartRateService.HeartRateUpdateEventHandler HeartRateUpdated;
+        void InitiateDefault();
+        void Cleanup();
     }
 
     internal class HeartRateService : IHeartRateService
@@ -141,8 +66,9 @@ namespace HeartRate
             var heartrateSelector = GattDeviceService
                 .GetDeviceSelectorFromUuid(GattServiceUuids.HeartRate);
 
-            var devices = AsyncResult(DeviceInformation
-                .FindAllAsync(heartrateSelector));
+            var devices = DeviceInformation
+                .FindAllAsync(heartrateSelector)
+                .AsyncResult();
 
             var device = devices.FirstOrDefault();
 
@@ -164,7 +90,8 @@ namespace HeartRate
 
                 Cleanup();
 
-                service = AsyncResult(GattDeviceService.FromIdAsync(device.Id));
+                service = GattDeviceService.FromIdAsync(device.Id)
+                    .AsyncResult();
 
                 _service = service;
             }
@@ -185,9 +112,10 @@ namespace HeartRate
                     $"Unable to locate heart rate measurement on device {device.Name} ({device.Id}).");
             }
 
-            var status = AsyncResult(
-                heartrate.WriteClientCharacteristicConfigurationDescriptorAsync(
-                    GattClientCharacteristicConfigurationDescriptorValue.Notify));
+            var status = heartrate
+                .WriteClientCharacteristicConfigurationDescriptorAsync(
+                    GattClientCharacteristicConfigurationDescriptorValue.Notify)
+                .AsyncResult();
 
             heartrate.ValueChanged += HeartRate_ValueChanged;
 
@@ -245,23 +173,18 @@ namespace HeartRate
             var hasRRInterval = flags.HasFlag(HeartRateFlags.HasRRInterval);
             var minLength = isshort ? 3 : 2;
 
-            ushort ReadUInt16()
-            {
-                return (ushort)(ms.ReadByte() | (ms.ReadByte() << 8));
-            }
-
             if (buffer.Length < minLength) return null;
 
             var reading = new HeartRateReading
             {
                 Flags = flags,
                 Status = contactSensor,
-                BeatsPerMinute = isshort ? ReadUInt16() : ms.ReadByte()
+                BeatsPerMinute = isshort ? ms.ReadUInt16() : ms.ReadByte()
             };
 
             if (hasEnergyExpended)
             {
-                reading.EnergyExpended = ReadUInt16();
+                reading.EnergyExpended = ms.ReadUInt16();
             }
 
             if (hasRRInterval)
@@ -270,7 +193,7 @@ namespace HeartRate
                 var rrvalues = new int[rrvalueCount];
                 for (var i = 0; i < rrvalueCount; ++i)
                 {
-                    rrvalues[i] = ReadUInt16();
+                    rrvalues[i] = ms.ReadUInt16();
                 }
 
                 reading.RRIntervals = rrvalues;
@@ -282,36 +205,7 @@ namespace HeartRate
         public void Cleanup()
         {
             var service = Interlocked.Exchange(ref _service, null);
-
-            if (service == null)
-            {
-                return;
-            }
-
-            try
-            {
-                service.Dispose();
-            }
-            catch { }
-        }
-
-        private static T AsyncResult<T>(IAsyncOperation<T> async)
-        {
-            while (true)
-            {
-                switch (async.Status)
-                {
-                    case AsyncStatus.Started:
-                        Thread.Sleep(100);
-                        continue;
-                    case AsyncStatus.Completed:
-                        return async.GetResults();
-                    case AsyncStatus.Error:
-                        throw async.ErrorCode;
-                    case AsyncStatus.Canceled:
-                        throw new TaskCanceledException();
-                }
-            }
+            service.TryDispose();
         }
 
         public void Dispose()

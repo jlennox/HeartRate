@@ -61,7 +61,7 @@ namespace HeartRate
         public void Dispose()
         {
             IsDisposed = true;
-            _timer?.Dispose();
+            _timer.TryDispose();
         }
     }
 }
