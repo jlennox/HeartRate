@@ -6,18 +6,24 @@ using System.Text;
 
 namespace HeartRate
 {
-    internal sealed class LogFileWriter : IDisposable
+    internal abstract class FileWriter : IDisposable
     {
+        protected bool HasFileWriter => _fs != null;
+
         private readonly FileStream _fs;
 
-        public LogFileWriter(string filename)
+        public FileWriter(string filename)
         {
+            if (filename == null) return;
+
             _fs = File.Open(filename, FileMode.Append,
                 FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public void Write(string s)
+        public void WriteFile(string s)
         {
+            if (_fs == null) return;
+
             var bytes = Encoding.UTF8.GetBytes(s);
             _fs.Write(bytes, 0, bytes.Length);
             _fs.Flush();
@@ -29,24 +35,19 @@ namespace HeartRate
         }
     }
 
-    internal sealed class IBIFile : IDisposable
+    internal sealed class IBIFile : FileWriter
     {
-        private readonly LogFileWriter _fs;
-
-        public IBIFile(string filename)
+        public IBIFile(string filename) : base(filename)
         {
-            if (filename == null) return;
-
-            _fs = new LogFileWriter(filename);
         }
 
         public void Reading(HeartRateReading reading)
         {
-            if (_fs == null) return;
+            if (!HasFileWriter) return;
             if (reading.RRIntervals == null) return;
             if (reading.RRIntervals.Length == 0) return;
 
-            _fs.Write(AsMS(reading.RRIntervals) + "\r\n");
+            WriteFile(AsMS(reading.RRIntervals) + "\r\n");
         }
 
         // rr intervals come from the device in units of 1/1024th of a second,
@@ -57,29 +58,21 @@ namespace HeartRate
                 .Select(t => (int)Math.Round(t / 1024d * 1000d, 0))
                 .Select(t => t.ToString());
         }
-
-        public void Dispose()
-        {
-            _fs.TryDispose();
-        }
     }
 
-    internal sealed class LogFile : IDisposable
+    internal sealed class LogFile : FileWriter
     {
         private readonly HeartRateSettings _settings;
-        private readonly LogFileWriter _fs;
 
         public LogFile(HeartRateSettings settings, string filename)
+            : base(filename)
         {
             _settings = settings;
-            if (filename == null) return;
-
-            _fs = new LogFileWriter(filename);
         }
 
         public void Reading(HeartRateReading reading)
         {
-            if (_fs == null) return;
+            if (!HasFileWriter) return;
 
             string data = null;
 
@@ -103,13 +96,8 @@ namespace HeartRate
 
             if (data != null)
             {
-                _fs.Write(data);
+                WriteFile(data);
             }
-        }
-
-        public void Dispose()
-        {
-            _fs.TryDispose();
         }
     }
 }

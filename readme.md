@@ -28,6 +28,7 @@ Change log
 * Added support for Energy Expended and RR-Intervals readings writing to logfile.
 * Added support for IBI file output.
 * Fixed logfiles containing date variables not working correctly.
+* Fixed logfiles file access sharing, allowing proper real time reading of their contents.
 
 **1.5** June 13th, 2020
 * Added background image support (#10)
