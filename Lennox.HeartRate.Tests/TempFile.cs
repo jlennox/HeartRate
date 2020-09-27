@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Lennox.HeartRate.Tests
 {
-    internal class TempFile : IDisposable
+    internal sealed class TempFile : IDisposable
     {
         public string Filename => Volatile.Read(ref _filename);
 

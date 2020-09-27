@@ -8,6 +8,7 @@ namespace HeartRate
 {
     internal static class Extensions
     {
+        // Arg, this is a horrible function.
         public static T AsyncResult<T>(this IAsyncOperation<T> async)
         {
             while (true)

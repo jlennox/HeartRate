@@ -70,11 +70,14 @@ namespace HeartRate
         {
             try
             {
+                // Order of operations -- _startedAt has to be set before
+                // `LoadSettingsLocked` is called.
+                _startedAt = now;
+
                 _settings = HeartRateSettings.CreateDefault(settingsFilename);
                 LoadSettingsLocked();
                 _settings.Save();
                 _service = service;
-                _startedAt = now;
                 _iconBitmap = new Bitmap(_iconWidth, _iconHeight);
                 _iconGraphics = Graphics.FromImage(_iconBitmap);
                 _measurementFont = new Font(

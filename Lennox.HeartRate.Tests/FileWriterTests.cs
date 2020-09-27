@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using HeartRate;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -8,6 +9,11 @@ namespace Lennox.HeartRate.Tests
     [TestClass]
     public class FileWriterTests
     {
+        private static int MillisecondToRRValue(double val)
+        {
+            return (int)(val / 1000d * 1024);
+        }
+
         [TestMethod]
         public void IBIFormatsCorrectly()
         {
@@ -17,18 +23,22 @@ namespace Lennox.HeartRate.Tests
             ibi.Reading(new HeartRateReading
             {
                 RRIntervals = new int[] {
-                    4 * 1024,
-                    4 * 1024 + (1024 / 2 + 4), // Ensure the rounding is working.
-                    6 * 1024 + 4
+                    MillisecondToRRValue(4),
+                    MillisecondToRRValue(5),
+                    MillisecondToRRValue(6)
                 }
             });
+
+            // No-operations.
+            ibi.Reading(new HeartRateReading { RRIntervals = null });
+            ibi.Reading(new HeartRateReading { RRIntervals = Array.Empty<int>() });
 
             ibi.Reading(new HeartRateReading
             {
                 RRIntervals = new int[] {
-                    7 * 1024,
-                    8 * 1024,
-                    9 * 1024
+                    MillisecondToRRValue(7),
+                    MillisecondToRRValue(8),
+                    MillisecondToRRValue(9)
                 }
             });
 

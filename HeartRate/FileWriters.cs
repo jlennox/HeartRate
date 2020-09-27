@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace HeartRate
 {
-    internal class IBIFile
+    internal sealed class IBIFile
     {
         private readonly string _filename;
 
@@ -20,18 +20,20 @@ namespace HeartRate
             if (reading.RRIntervals == null) return;
             if (reading.RRIntervals.Length == 0) return;
 
-            File.AppendAllLines(_filename, AsMilliseconds(reading.RRIntervals));
+            File.AppendAllLines(_filename, AsMS(reading.RRIntervals));
         }
 
-        internal static IEnumerable<string> AsMilliseconds(int[] rrvalues)
+        // rr intervals come from the device in units of 1/1024th of a second,
+        // but IBI files require milliseconds.
+        private static IEnumerable<string> AsMS(IEnumerable<int> rrintervals)
         {
-            return rrvalues
-                .Select(t => (int)Math.Round(t / 1024d, 0))
+            return rrintervals
+                .Select(t => (int)Math.Round(t / 1024d * 1000d, 0))
                 .Select(t => t.ToString());
         }
     }
 
-    internal class LogFile
+    internal sealed class LogFile
     {
         private readonly HeartRateSettings _settings;
         private readonly string _filename;
