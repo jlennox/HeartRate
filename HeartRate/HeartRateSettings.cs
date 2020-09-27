@@ -35,6 +35,7 @@ namespace HeartRate
         public string LogFormat;
         public string LogDateFormat;
         public string LogFile;
+        public string IBIFile;
 
         public HeartRateSettings(string filename)
         {
@@ -61,7 +62,8 @@ namespace HeartRate
                 Sizable = true,
                 LogFormat = "csv",
                 LogDateFormat = DateTimeFormatter.DefaultColumn,
-                LogFile = " " // Initialize to " " instead of null so the entry is still written.
+                LogFile = " ", // Initialize to " " instead of null so the entry is still written.
+                IBIFile = " "
             };
         }
 
@@ -98,6 +100,7 @@ namespace HeartRate
             LogFormat = protocol.LogFormat;
             LogDateFormat = protocol.LogDateFormat;
             LogFile = protocol.LogFile;
+            IBIFile = protocol.IBIFile;
 
             // In the future:
             // if (protocol.Version >= 2) ...
@@ -125,6 +128,7 @@ namespace HeartRate
                 LogFormat = LogFormat,
                 LogDateFormat = LogDateFormat,
                 LogFile = LogFile,
+                IBIFile = IBIFile,
             };
         }
 
@@ -191,6 +195,7 @@ namespace HeartRate
         public string LogFormat { get; set; }
         public string LogDateFormat { get; set; }
         public string LogFile { get; set; }
+        public string IBIFile { get; set; }
         // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
 
         // Required by deserializer.
@@ -217,6 +222,7 @@ namespace HeartRate
             LogFormat = settings.LogFormat;
             LogDateFormat = settings.LogDateFormat ?? DateTimeFormatter.DefaultColumn;
             LogFile = settings.LogFile ?? " ";
+            IBIFile = settings.IBIFile ?? " ";
         }
 
         private static string ColorToString(Color color)

@@ -1,21 +1,38 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
-using Windows.Foundation;
 using Windows.Storage.Streams;
 
 namespace HeartRate
 {
-    enum ContactSensorStatus
+    internal enum ContactSensorStatus
     {
         NotSupported,
         NotSupported2,
         NoContact,
         Contact
+    }
+
+    [Flags]
+    internal enum HeartRateFlags
+    {
+        None = 0,
+        IsShort = 1,
+        HasEnergyExpended = 1 << 3,
+        HasRRInterval = 1 << 4,
+    }
+
+    internal struct HeartRateReading
+    {
+        public HeartRateFlags Flags { get; set; }
+        public ContactSensorStatus Status { get; set; }
+        public int BeatsPerMinute { get; set; }
+        public int? EnergyExpended { get; set; }
+        public int[] RRIntervals { get; set; }
     }
 
     internal interface IHeartRateService : IDisposable
@@ -27,101 +44,31 @@ namespace HeartRate
         void Cleanup();
     }
 
-    internal class HeartRateServiceWatchdog : IDisposable
-    {
-        private readonly TimeSpan _timeout;
-        private readonly IHeartRateService _service;
-        private readonly Stopwatch _lastUpdateTimer = Stopwatch.StartNew();
-        private readonly object _sync = new object();
-        private bool _isDisposed = false;
-
-        public HeartRateServiceWatchdog(
-            TimeSpan timeout,
-            IHeartRateService service)
-        {
-            _timeout = timeout;
-            _service = service ?? throw new ArgumentNullException(nameof(service));
-            _service.HeartRateUpdated += _service_HeartRateUpdated;
-
-            var thread = new Thread(WatchdogThread)
-            {
-                Name = GetType().Name,
-                IsBackground = true
-            };
-
-            thread.Start();
-        }
-
-        private void _service_HeartRateUpdated(
-            ContactSensorStatus status, int bpm)
-        {
-            lock (_sync)
-            {
-                _lastUpdateTimer.Restart();
-            }
-        }
-
-        private void WatchdogThread()
-        {
-            while (!_isDisposed && !_service.IsDisposed)
-            {
-                var needsRefresh = false;
-                lock (_sync)
-                {
-                    if (_isDisposed)
-                    {
-                        return;
-                    }
-
-                    if (_lastUpdateTimer.Elapsed > _timeout)
-                    {
-                        needsRefresh = true;
-                        _lastUpdateTimer.Restart();
-                    }
-                }
-
-                if (needsRefresh)
-                {
-                    Debug.WriteLine("Restarting services...");
-                    _service.InitiateDefault();
-                }
-
-                Thread.Sleep(10000);
-            }
-
-            Debug.WriteLine("Watchdog thread exiting.");
-        }
-
-        public void Dispose()
-        {
-            lock (_sync)
-            {
-                _isDisposed = true;
-            }
-        }
-    }
-
     internal class HeartRateService : IHeartRateService
     {
         // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml
         private const int _heartRateMeasurementCharacteristicId = 0x2A37;
+        private static readonly Guid _heartRateMeasurementCharacteristicUuid =
+            GattDeviceService.ConvertShortIdToUuid(_heartRateMeasurementCharacteristicId);
 
         public bool IsDisposed => _isDisposed;
 
         private GattDeviceService _service;
+        private byte[] _buffer;
         private readonly object _disposeSync = new object();
         private bool _isDisposed;
 
         public event HeartRateUpdateEventHandler HeartRateUpdated;
-        public delegate void HeartRateUpdateEventHandler(ContactSensorStatus status, int bpm);
+        public delegate void HeartRateUpdateEventHandler(HeartRateReading reading);
 
         public void InitiateDefault()
         {
             var heartrateSelector = GattDeviceService
                 .GetDeviceSelectorFromUuid(GattServiceUuids.HeartRate);
 
-            var devices = AsyncResult(DeviceInformation
-                .FindAllAsync(heartrateSelector));
+            var devices = DeviceInformation
+                .FindAllAsync(heartrateSelector)
+                .AsyncResult();
 
             var device = devices.FirstOrDefault();
 
@@ -143,7 +90,8 @@ namespace HeartRate
 
                 Cleanup();
 
-                service = AsyncResult(GattDeviceService.FromIdAsync(device.Id));
+                service = GattDeviceService.FromIdAsync(device.Id)
+                    .AsyncResult();
 
                 _service = service;
             }
@@ -154,9 +102,8 @@ namespace HeartRate
                     $"Unable to get service to {device.Name} ({device.Id}). Is the device inuse by another program? The Bluetooth adaptor may need to be turned off and on again.");
             }
 
-            var heartrate = service.GetCharacteristics(
-                GattDeviceService.ConvertShortIdToUuid(
-                    _heartRateMeasurementCharacteristicId))
+            var heartrate = service
+                .GetCharacteristics(_heartRateMeasurementCharacteristicUuid)
                 .FirstOrDefault();
 
             if (heartrate == null)
@@ -165,9 +112,10 @@ namespace HeartRate
                     $"Unable to locate heart rate measurement on device {device.Name} ({device.Id}).");
             }
 
-            var status = AsyncResult(
-                heartrate.WriteClientCharacteristicConfigurationDescriptorAsync(
-                    GattClientCharacteristicConfigurationDescriptorValue.Notify));
+            var status = heartrate
+                .WriteClientCharacteristicConfigurationDescriptorAsync(
+                    GattClientCharacteristicConfigurationDescriptorValue.Notify)
+                .AsyncResult();
 
             heartrate.ValueChanged += HeartRate_ValueChanged;
 
@@ -178,73 +126,86 @@ namespace HeartRate
             GattCharacteristic sender,
             GattValueChangedEventArgs args)
         {
-            var value = args.CharacteristicValue;
+            var buffer = args.CharacteristicValue;
+            if (buffer.Length == 0) return;
 
-            if (value.Length == 0)
+            var byteBuffer = Interlocked.Exchange(ref _buffer, null)
+                ?? new byte[buffer.Length];
+
+            if (byteBuffer.Length != buffer.Length)
             {
-                return;
+                byteBuffer = new byte[buffer.Length];
             }
 
-            using (var reader = DataReader.FromBuffer(value))
+            try
             {
-                var bpm = -1;
-                var flags = reader.ReadByte();
-                var isshort = (flags & 1) == 1;
-                var contactSensor = (ContactSensorStatus)((flags >> 1) & 3);
-                var minLength = isshort ? 3 : 2;
+                using var reader = DataReader.FromBuffer(buffer);
+                reader.ReadBytes(byteBuffer);
 
-                if (value.Length < minLength)
+                var readingValue = ReadBuffer(byteBuffer, (int)buffer.Length);
+
+                if (readingValue == null)
                 {
-                    Debug.WriteLine($"Buffer was too small. Got {value.Length}, expected {minLength}.");
+                    Debug.WriteLine($"Buffer was too small. Got {buffer.Length}.");
                     return;
                 }
 
-                if (value.Length > 1)
+                var reading = readingValue.Value;
+                Debug.WriteLine($"Read {reading.Flags:X} {reading.Status} {reading.BeatsPerMinute}");
+
+                HeartRateUpdated?.Invoke(reading);
+            }
+            finally
+            {
+                Volatile.Write(ref _buffer, byteBuffer);
+            }
+        }
+
+        internal static HeartRateReading? ReadBuffer(byte[] buffer, int length)
+        {
+            if (length == 0) return null;
+
+            var ms = new MemoryStream(buffer, 0, length);
+            var flags = (HeartRateFlags)ms.ReadByte();
+            var isshort = flags.HasFlag(HeartRateFlags.IsShort);
+            var contactSensor = (ContactSensorStatus)(((int)flags >> 1) & 3);
+            var hasEnergyExpended = flags.HasFlag(HeartRateFlags.HasEnergyExpended);
+            var hasRRInterval = flags.HasFlag(HeartRateFlags.HasRRInterval);
+            var minLength = isshort ? 3 : 2;
+
+            if (buffer.Length < minLength) return null;
+
+            var reading = new HeartRateReading
+            {
+                Flags = flags,
+                Status = contactSensor,
+                BeatsPerMinute = isshort ? ms.ReadUInt16() : ms.ReadByte()
+            };
+
+            if (hasEnergyExpended)
+            {
+                reading.EnergyExpended = ms.ReadUInt16();
+            }
+
+            if (hasRRInterval)
+            {
+                var rrvalueCount = (buffer.Length - ms.Position) / sizeof(ushort);
+                var rrvalues = new int[rrvalueCount];
+                for (var i = 0; i < rrvalueCount; ++i)
                 {
-                    bpm = isshort
-                        ? reader.ReadUInt16()
-                        : reader.ReadByte();
+                    rrvalues[i] = ms.ReadUInt16();
                 }
 
-                Debug.WriteLine($"Read {flags:X} {contactSensor} {bpm}");
-
-                HeartRateUpdated?.Invoke(contactSensor, bpm);
+                reading.RRIntervals = rrvalues;
             }
+
+            return reading;
         }
 
         public void Cleanup()
         {
             var service = Interlocked.Exchange(ref _service, null);
-
-            if (service == null)
-            {
-                return;
-            }
-
-            try
-            {
-                service.Dispose();
-            }
-            catch { }
-        }
-
-        private static T AsyncResult<T>(IAsyncOperation<T> async)
-        {
-            while (true)
-            {
-                switch (async.Status)
-                {
-                    case AsyncStatus.Started:
-                        Thread.Sleep(100);
-                        continue;
-                    case AsyncStatus.Completed:
-                        return async.GetResults();
-                    case AsyncStatus.Error:
-                        throw async.ErrorCode;
-                    case AsyncStatus.Canceled:
-                        throw new TaskCanceledException();
-                }
-            }
+            service.TryDispose();
         }
 
         public void Dispose()
