@@ -40,36 +40,6 @@ Change log
 * Added system tray context menu for selecting colors/fonts.
 * Fixed (maybe?) the issue with the heart rate recording could stop.
 
-Notice on deployment
---------
-Some builds of Windows 10 have bug related to security which causes Desktop
-apps to stop receiving notification callbacks from GATT characteristics after
-receiving a few initial callbacks. [More details available](https://social.msdn.microsoft.com/Forums/en-US/58da3fdb-a0e1-4161-8af3-778b6839f4e1/)
-or in similar posts on social.msdn.microsoft.com.
-
-There are several workarounds, the simplest being creating an AppId for the app in
-the Windows Registry and adding a security setting for the AppId, like below:
-
-```
-Windows Registry Editor Version 5.00
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\AppID\{C6BFD646-3DF0-4DE5-B7AF-5FFFACB844A5}]
-"AccessPermission"=hex:01,00,04,80,9c,00,00,00,ac,00,00,00,00,00,00,00,14,00,\
-  00,00,02,00,88,00,06,00,00,00,00,00,14,00,07,00,00,00,01,01,00,00,00,00,00,\
-  05,0a,00,00,00,00,00,14,00,03,00,00,00,01,01,00,00,00,00,00,05,12,00,00,00,\
-  00,00,18,00,07,00,00,00,01,02,00,00,00,00,00,05,20,00,00,00,20,02,00,00,00,\
-  00,18,00,03,00,00,00,01,02,00,00,00,00,00,0f,02,00,00,00,01,00,00,00,00,00,\
-  14,00,03,00,00,00,01,01,00,00,00,00,00,05,13,00,00,00,00,00,14,00,03,00,00,\
-  00,01,01,00,00,00,00,00,05,14,00,00,00,01,02,00,00,00,00,00,05,20,00,00,00,\
-  20,02,00,00,01,02,00,00,00,00,00,05,20,00,00,00,20,02,00,00
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\AppID\YOURAPP.exe]
-"AppID"="{C6BFD646-3DF0-4DE5-B7AF-5FFFACB844A5}"
-```
-
-Wanting to remain lightweight and not having an installer, this is not handled
-automatically by the program.
-
 How to use
 ----------
 1. Connect appropriate bluetooth device inside Window's bluetooth settings.
@@ -132,3 +102,33 @@ is taken at the startup time of the program.
 Documents about standard and custom datetime formatters:
 https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings
 https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings
+
+Notice on deployment
+--------
+Some builds of Windows 10 have bug related to security which causes Desktop
+apps to stop receiving notification callbacks from GATT characteristics after
+receiving a few initial callbacks. [More details available](https://social.msdn.microsoft.com/Forums/en-US/58da3fdb-a0e1-4161-8af3-778b6839f4e1/)
+or in similar posts on social.msdn.microsoft.com.
+
+There are several workarounds, the simplest being creating an AppId for the app in
+the Windows Registry and adding a security setting for the AppId, like below:
+
+```
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\AppID\{C6BFD646-3DF0-4DE5-B7AF-5FFFACB844A5}]
+"AccessPermission"=hex:01,00,04,80,9c,00,00,00,ac,00,00,00,00,00,00,00,14,00,\
+  00,00,02,00,88,00,06,00,00,00,00,00,14,00,07,00,00,00,01,01,00,00,00,00,00,\
+  05,0a,00,00,00,00,00,14,00,03,00,00,00,01,01,00,00,00,00,00,05,12,00,00,00,\
+  00,00,18,00,07,00,00,00,01,02,00,00,00,00,00,05,20,00,00,00,20,02,00,00,00,\
+  00,18,00,03,00,00,00,01,02,00,00,00,00,00,0f,02,00,00,00,01,00,00,00,00,00,\
+  14,00,03,00,00,00,01,01,00,00,00,00,00,05,13,00,00,00,00,00,14,00,03,00,00,\
+  00,01,01,00,00,00,00,00,05,14,00,00,00,01,02,00,00,00,00,00,05,20,00,00,00,\
+  20,02,00,00,01,02,00,00,00,00,00,05,20,00,00,00,20,02,00,00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\AppID\YOURAPP.exe]
+"AppID"="{C6BFD646-3DF0-4DE5-B7AF-5FFFACB844A5}"
+```
+
+Wanting to remain lightweight and not having an installer, this is not handled
+automatically by the program.
