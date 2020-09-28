@@ -20,11 +20,11 @@ namespace HeartRate
                 FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public void WriteFile(string s)
+        public void WriteLine(string s)
         {
             if (_fs == null) return;
 
-            var bytes = Encoding.UTF8.GetBytes(s);
+            var bytes = Encoding.UTF8.GetBytes(s + "\r\n");
             _fs.Write(bytes, 0, bytes.Length);
             _fs.Flush();
         }
@@ -47,7 +47,7 @@ namespace HeartRate
             if (reading.RRIntervals == null) return;
             if (reading.RRIntervals.Length == 0) return;
 
-            WriteFile(AsMS(reading.RRIntervals) + "\r\n");
+            WriteLine(string.Join("\r\n", AsMS(reading.RRIntervals)));
         }
 
         // rr intervals come from the device in units of 1/1024th of a second,
@@ -90,13 +90,13 @@ namespace HeartRate
             switch ((_settings.LogFormat ?? "").ToLower())
             {
                 case "csv":
-                    data = $"{dateString},{bpm},{status},{reading.EnergyExpended},{rrvalue}\r\n";
+                    data = $"{dateString},{bpm},{status},{reading.EnergyExpended},{rrvalue}";
                     break;
             }
 
             if (data != null)
             {
-                WriteFile(data);
+                WriteLine(data);
             }
         }
     }
