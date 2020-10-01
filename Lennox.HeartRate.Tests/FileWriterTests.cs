@@ -18,30 +18,29 @@ namespace Lennox.HeartRate.Tests
         public void IBIFormatsCorrectly()
         {
             using var tmp = new TempFile();
-            using (var ibi = new IBIFile(tmp))
+            var ibi = new IBIFile(tmp);
+
+            ibi.Reading(new HeartRateReading
             {
-                ibi.Reading(new HeartRateReading
-                {
-                    RRIntervals = new int[] {
-                        MillisecondToRRValue(4),
-                        MillisecondToRRValue(5),
-                        MillisecondToRRValue(6)
-                    }
-                });
+                RRIntervals = new int[] {
+                    MillisecondToRRValue(4),
+                    MillisecondToRRValue(5),
+                    MillisecondToRRValue(6)
+                }
+            });
 
-                // No-operations.
-                ibi.Reading(new HeartRateReading { RRIntervals = null });
-                ibi.Reading(new HeartRateReading { RRIntervals = Array.Empty<int>() });
+            // No-operations.
+            ibi.Reading(new HeartRateReading { RRIntervals = null });
+            ibi.Reading(new HeartRateReading { RRIntervals = Array.Empty<int>() });
 
-                ibi.Reading(new HeartRateReading
-                {
-                    RRIntervals = new int[] {
-                        MillisecondToRRValue(7),
-                        MillisecondToRRValue(8),
-                        MillisecondToRRValue(9)
-                    }
-                });
-            }
+            ibi.Reading(new HeartRateReading
+            {
+                RRIntervals = new int[] {
+                    MillisecondToRRValue(7),
+                    MillisecondToRRValue(8),
+                    MillisecondToRRValue(9)
+                }
+            });
 
             var actual = File.ReadAllLines(tmp);
             var expected = Enumerable.Range(4, 6)

@@ -315,8 +315,6 @@ namespace HeartRate
                     _measurementFont.TryDispose();
                     _iconStringFormat.TryDispose();
                     _watchdog.TryDispose();
-                    _log.TryDispose();
-                    _ibi.TryDispose();
                 }
             }
 
@@ -394,7 +392,6 @@ namespace HeartRate
         {
             _settings.Load();
 
-            _log.TryDispose();
             _log = new LogFile(_settings, GetFilename(_settings.LogFile));
             _ibi = new IBIFile(GetFilename(_settings.IBIFile));
         }
