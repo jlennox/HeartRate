@@ -12,7 +12,7 @@ namespace HeartRate
 
         private readonly FileStream _fs;
 
-        public FileWriter(string filename)
+        protected FileWriter(string filename)
         {
             if (filename == null) return;
 

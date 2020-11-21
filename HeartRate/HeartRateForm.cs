@@ -91,6 +91,12 @@ namespace HeartRate
                 FormBorderStyle = _settings.Sizable
                     ? FormBorderStyle.Sizable
                     : FormBorderStyle.SizableToolWindow;
+
+                CreateEnumSubmenu<ContentAlignment>(textAlignmentToolStripMenuItem,
+                    textAlignmentToolStripMenuItemItem_Click);
+
+                CreateEnumSubmenu<ImageLayout>(backgroundImagePositionToolStripMenuItem,
+                    backgroundImagePositionToolStripMenuItemItem_Click);
             }
             catch
             {
@@ -258,13 +264,30 @@ namespace HeartRate
 
         private void UpdateUICore()
         {
-            uxBpmLabel.BackColor = _settings.UIBackgroundColor;
+            // Sometimes firstUpdate will be checked to update corresponding UI components.
+            var firstUpdate = _lastSettings == null;
 
-            var fontx = _settings.UIFontName;
-
-            if (uxBpmLabel.Font.FontFamily.Name != fontx)
+            if (uxBpmLabel.Font.FontFamily.Name != _settings.UIFontName ||
+                uxBpmLabel.Font.Style != _settings.UIFontStyle)
             {
                 UpdateLabelFontLocked();
+            }
+
+            if (uxBpmLabel.TextAlign != _settings.UITextAlignment)
+            {
+                uxBpmLabel.TextAlign = _settings.UITextAlignment;
+                UpdateSubmenus();
+            }
+
+            if (uxBpmLabel.BackgroundImageLayout != _settings.UIBackgroundLayout)
+            {
+                uxBpmLabel.BackgroundImageLayout = _settings.UIBackgroundLayout;
+                UpdateSubmenus();
+            }
+
+            if (uxBpmLabel.BackColor != _settings.UIBackgroundColor)
+            {
+                uxBpmLabel.BackColor = _settings.UIBackgroundColor;
             }
 
             if (_lastSettings?.UIBackgroundFile != _settings.UIBackgroundFile)
@@ -293,11 +316,6 @@ namespace HeartRate
                 }
             }
 
-            if (_lastSettings?.UIBackgroundLayout != _settings.UIBackgroundLayout)
-            {
-                uxBpmLabel.BackgroundImageLayout = _settings.UIBackgroundLayout;
-            }
-
             _lastSettings = _settings.Clone();
         }
 
@@ -323,6 +341,94 @@ namespace HeartRate
             base.Dispose(disposing);
         }
 
+        private void UpdateLabelFont()
+        {
+            lock (_updateSync)
+            {
+                UpdateLabelFontLocked();
+            }
+        }
+
+        private void UpdateLabelFontLocked()
+        {
+            var newFont = new Font(
+                _settings.UIFontName, uxBpmLabel.Height * .8f,
+                _settings.UIFontStyle, GraphicsUnit.Pixel);
+
+            uxBpmLabel.Font = newFont;
+            _lastFont.TryDispose();
+            _lastFont = newFont;
+        }
+
+        private void LoadSettingsLocked()
+        {
+            _settings.Load();
+
+            _log.TryDispose();
+            _log = new LogFile(_settings, FormatFilename(_settings.LogFile));
+            _ibi = new IBIFile(FormatFilename(_settings.IBIFile));
+        }
+
+        private string FormatFilename(string inputFilename)
+        {
+            return string.IsNullOrWhiteSpace(inputFilename)
+                ? null
+                : DateTimeFormatter.FormatStringTokens(
+                    inputFilename, _startedAt, forFilepath: true);
+        }
+
+        private void UpdateSettingColor(ref Color settingColor)
+        {
+            if (!Prompt.TryColor(settingColor, out var color)) return;
+
+            lock (_updateSync)
+            {
+                settingColor = color;
+                _settings.Save();
+            }
+
+            UpdateUI();
+        }
+
+        private void UpdateSubmenus()
+        {
+            UpdateEnumSubmenu(_settings.UITextAlignment, textAlignmentToolStripMenuItem);
+            UpdateEnumSubmenu(_settings.UIBackgroundLayout, backgroundImagePositionToolStripMenuItem);
+        }
+
+        private static void UpdateEnumSubmenu<TEnum>(TEnum value, ToolStripMenuItem parent)
+        {
+            var stringed = value.ToString();
+
+            foreach (var item in parent.DropDownItems)
+            {
+                var menuItem = (ToolStripMenuItem)item;
+                menuItem.CheckState = (string)menuItem.Tag == stringed
+                    ? CheckState.Checked : CheckState.Unchecked;
+            }
+        }
+
+        private static void CreateEnumSubmenu<TEnum>(ToolStripMenuItem parent, EventHandler click)
+        {
+            foreach (var align in Enum.GetNames(typeof(TEnum)))
+            {
+                var strip = new ToolStripMenuItem
+                {
+                    Text = align,
+                    Tag = align
+                };
+                strip.Click += click;
+                parent.DropDownItems.Add(strip);
+            }
+        }
+
+        private static TEnum EnumFromMenuItemTag<TEnum>(object sender)
+        {
+            var menuItem = (ToolStripMenuItem)sender;
+            return (TEnum)Enum.Parse(typeof(TEnum), menuItem.Tag.ToString());
+        }
+
+        #region UI events
         private void uxBpmNotifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -347,29 +453,11 @@ namespace HeartRate
             UpdateUI();
         }
 
-        private void UpdateLabelFont()
-        {
-            lock (_updateSync)
-            {
-                UpdateLabelFontLocked();
-            }
-        }
-
-        private void UpdateLabelFontLocked()
-        {
-            var newFont = new Font(
-                _settings.UIFontName, uxBpmLabel.Height,
-                GraphicsUnit.Pixel);
-
-            uxBpmLabel.Font = newFont;
-            _lastFont.TryDispose();
-            _lastFont = newFont;
-        }
-
         private void uxMenuEditSettings_Click(object sender, EventArgs e)
         {
             var thread = new Thread(() => {
-                using (var process = Process.Start(new ProcessStartInfo {
+                using (var process = Process.Start(new ProcessStartInfo
+                {
                     FileName = HeartRateSettings.GetFilename(),
                     UseShellExecute = true,
                     Verb = "EDIT"
@@ -382,7 +470,8 @@ namespace HeartRate
                 {
                     LoadSettingsLocked();
                 }
-            }) {
+            })
+            {
                 IsBackground = true,
                 Name = "Edit config"
             };
@@ -390,125 +479,15 @@ namespace HeartRate
             thread.Start();
         }
 
-        private void LoadSettingsLocked()
-        {
-            _settings.Load();
-
-            _log.TryDispose();
-            _log = new LogFile(_settings, GetFilename(_settings.LogFile));
-            _ibi = new IBIFile(GetFilename(_settings.IBIFile));
-        }
-
-        private string GetFilename(string inputFilename)
-        {
-            return string.IsNullOrWhiteSpace(inputFilename)
-                ? null
-                : DateTimeFormatter.FormatStringTokens(
-                    inputFilename, _startedAt, forFilepath: true);
-        }
-
-        private void uxExitMenuItem_Click(object sender, EventArgs e)
-        {
-            Environment.Exit(0);
-        }
-
-        private bool TryPromptColor(Color current, out Color color)
-        {
-            color = default;
-
-            using (var dlg = new ColorDialog())
-            {
-                dlg.Color = current;
-
-                if (dlg.ShowDialog() == DialogResult.OK)
-                {
-                    color = dlg.Color;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private bool TryPromptFont(string current, out string font)
-        {
-            font = default;
-
-            using (var dlg = new FontDialog()
-            {
-                FontMustExist = true
-            })
-            {
-                using (dlg.Font = new Font(current, 10, GraphicsUnit.Pixel))
-                {
-                    if (dlg.ShowDialog() == DialogResult.OK)
-                    {
-                        font = dlg.Font.Name;
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private bool TryPromptFile(string current, string filter, out string file)
-        {
-            file = default;
-
-            using (var dlg = new OpenFileDialog
-            {
-                CheckFileExists = true,
-                FileName = current,
-                Filter = filter
-            })
-            {
-                if (dlg.ShowDialog() == DialogResult.OK)
-                {
-                    file = dlg.FileName;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private void updateSettingColor(ref Color settingColor)
-        {
-            if (!TryPromptColor(settingColor, out var color)) return;
-
-            lock (_updateSync)
-            {
-                settingColor = color;
-                _settings.Save();
-            }
-
-            UpdateUI();
-        }
-
-        private void editFontColorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            updateSettingColor(ref _settings.Color);
-        }
-
-        private void editIconFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            updateSettingColor(ref _settings.WarnColor);
-        }
-
-        private void editWindowFontColorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            updateSettingColor(ref _settings.UIColor);
-        }
-
-        private void editWindowFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            updateSettingColor(ref _settings.UIWarnColor);
-        }
+        private void uxExitMenuItem_Click(object sender, EventArgs e) => Environment.Exit(0);
+        private void editFontColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.Color);
+        private void editIconFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.WarnColor);
+        private void editWindowFontColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.UIColor);
+        private void editWindowFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.UIWarnColor);
 
         private void selectIconFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!TryPromptFont(_settings.FontName, out var font)) return;
+            if (!Prompt.TryFont(_settings.FontName, default, out var font, out _)) return;
 
             lock (_updateSync)
             {
@@ -521,11 +500,12 @@ namespace HeartRate
 
         private void selectWindowFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!TryPromptFont(_settings.UIFontName, out var font)) return;
+            if (!Prompt.TryFont(_settings.UIFontName, _settings.UIFontStyle, out var font, out var style)) return;
 
             lock (_updateSync)
             {
                 _settings.UIFontName = font;
+                _settings.UIFontStyle = style;
                 _settings.Save();
             }
 
@@ -534,7 +514,7 @@ namespace HeartRate
 
         private void selectBackgroundImageToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!TryPromptFile(_settings.UIBackgroundFile, "Image files|*.bmp;*.gif;*.jpeg;*.png;*.tiff|All files (*.*)|*.*", out var file)) return;
+            if (!Prompt.TryFile(_settings.UIBackgroundFile, "Image files|*.bmp;*.gif;*.jpeg;*.png;*.tiff|All files (*.*)|*.*", out var file)) return;
 
             lock (_updateSync)
             {
@@ -556,11 +536,9 @@ namespace HeartRate
             UpdateUI();
         }
 
-        private void selectBackgroundLayoutToolStripMenuItem_SelectedIndexChanged(object sender, EventArgs e)
+        private void backgroundImagePositionToolStripMenuItemItem_Click(object sender, EventArgs e)
         {
-            var text = selectBackgroundLayoutToolStripMenuItem.Text;
-
-            if (!Enum.TryParse<ImageLayout>(text, true, out var layout)) return;
+            var layout = EnumFromMenuItemTag<ImageLayout>(sender);
 
             lock (_updateSync)
             {
@@ -568,7 +546,23 @@ namespace HeartRate
                 _settings.Save();
             }
 
+            UpdateSubmenus();
             UpdateUI();
         }
+
+        private void textAlignmentToolStripMenuItemItem_Click(object sender, EventArgs e)
+        {
+            var alignment = EnumFromMenuItemTag<ContentAlignment>(sender);
+
+            lock (_updateSync)
+            {
+                _settings.UITextAlignment = alignment;
+                _settings.Save();
+            }
+
+            UpdateSubmenus();
+            UpdateUI();
+        }
+        #endregion
     }
 }
