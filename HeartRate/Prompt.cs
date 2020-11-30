@@ -24,23 +24,21 @@ namespace HeartRate
         public static bool TryFont(
             string currentFond,
             FontStyle currentStyle,
-            out string font,
-            out FontStyle style)
+            int currentSize,
+            out Font font)
         {
             font = default;
-            style = default;
 
-            using var dlgFont = new Font(currentFond, 10, currentStyle, GraphicsUnit.Pixel);
+            using var dlgFont = new Font(currentFond, currentSize, currentStyle, GraphicsUnit.Pixel);
             using var dlg = new FontDialog
             {
                 FontMustExist = true,
-                Font = dlgFont
+                Font = dlgFont,
             };
 
             if (dlg.ShowDialog() != DialogResult.OK) return false;
 
-            font = dlg.Font.Name;
-            style = dlg.Font.Style;
+            font = dlg.Font;
             return true;
         }
 

@@ -51,12 +51,11 @@ namespace HeartRate
         private static readonly Guid _heartRateMeasurementCharacteristicUuid =
             GattDeviceService.ConvertShortIdToUuid(_heartRateMeasurementCharacteristicId);
 
-        public bool IsDisposed => _isDisposed;
+        public bool IsDisposed { get; private set; }
 
         private GattDeviceService _service;
         private byte[] _buffer;
         private readonly object _disposeSync = new object();
-        private bool _isDisposed;
 
         public event HeartRateUpdateEventHandler HeartRateUpdated;
         public delegate void HeartRateUpdateEventHandler(HeartRateReading reading);
@@ -83,7 +82,7 @@ namespace HeartRate
 
             lock (_disposeSync)
             {
-                if (_isDisposed)
+                if (IsDisposed)
                 {
                     throw new ObjectDisposedException(GetType().Name);
                 }
@@ -212,7 +211,7 @@ namespace HeartRate
         {
             lock (_disposeSync)
             {
-                _isDisposed = true;
+                IsDisposed = true;
 
                 Cleanup();
             }

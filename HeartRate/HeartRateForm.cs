@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using static HeartRate.User32;
 
 namespace HeartRate
 {
@@ -36,23 +37,8 @@ namespace HeartRate
         private HeartRateSettings _lastSettings;
 
         private string _iconText;
-        private Font _lastFont;
+        private readonly Queue<Font> _lastFonts = new Queue<Font>();
         private IntPtr _oldIconHandle;
-
-        [DllImport("user32.dll")]
-        private static extern int GetSystemMetrics(SystemMetric nIndex);
-
-        [DllImport("user32.dll")]
-        private static extern int SetForegroundWindow(int hWnd);
-
-        [DllImport("user32.dll")]
-        private static extern bool DestroyIcon(IntPtr handle);
-
-        private enum SystemMetric
-        {
-            SmallIconX = 49, // SM_CXSMICON
-            SmallIconY = 50, // SM_CYSMICON
-        }
 
         public HeartRateForm() : this(
             Environment.CommandLine.Contains("--test")
@@ -109,6 +95,8 @@ namespace HeartRate
         {
             UpdateLabelFont();
             Hide();
+
+            Size = _settings.UIWindowSize;
 
             try
             {
@@ -220,15 +208,6 @@ namespace HeartRate
 
                 _iconText = iconText;
 
-                Invoke(new Action(() => {
-                    uxBpmLabel.Text = _iconText;
-                    uxBpmLabel.ForeColor = isWarn
-                        ? _settings.UIWarnColor
-                        : _settings.UIColor;
-
-                    UpdateUICore();
-                }));
-
                 var iconHandle = _iconBitmap.GetHicon();
 
                 using (var icon = Icon.FromHandle(iconHandle))
@@ -255,6 +234,19 @@ namespace HeartRate
 
                 _oldIconHandle = iconHandle;
             }
+
+            Invoke(new Action(() => {
+                lock (_updateSync)
+                {
+                    uxBpmLabel.Text = _iconText;
+                    uxBpmLabel.ForeColor = isWarn
+                        ? _settings.UIWarnColor
+                        : _settings.UIColor;
+
+                    UpdateUICore();
+                    Invalidate();
+                }
+            }));
         }
 
         private void UpdateUI()
@@ -264,11 +256,10 @@ namespace HeartRate
 
         private void UpdateUICore()
         {
-            // Sometimes firstUpdate will be checked to update corresponding UI components.
-            var firstUpdate = _lastSettings == null;
-
             if (uxBpmLabel.Font.FontFamily.Name != _settings.UIFontName ||
-                uxBpmLabel.Font.Style != _settings.UIFontStyle)
+                uxBpmLabel.Font.Style != _settings.UIFontStyle ||
+                _lastSettings?.UIFontUseSize != _settings.UIFontUseSize ||
+                _lastSettings?.UIFontSize != _settings.UIFontSize)
             {
                 UpdateLabelFontLocked();
             }
@@ -317,6 +308,8 @@ namespace HeartRate
             }
 
             _lastSettings = _settings.Clone();
+
+            Invalidate();
         }
 
         protected override void Dispose(bool disposing)
@@ -349,15 +342,47 @@ namespace HeartRate
             }
         }
 
-        private void UpdateLabelFontLocked()
+        private Font CreateUIFont()
         {
-            var newFont = new Font(
-                _settings.UIFontName, uxBpmLabel.Height * .8f,
+            if (_settings.UIFontUseSize)
+            {
+                return new Font(
+                    _settings.UIFontName, _settings.UIFontSize,
+                    _settings.UIFontStyle, GraphicsUnit.Pixel);
+            }
+
+            using var tempFont = new Font(
+                _settings.UIFontName, ClientSize.Height,
                 _settings.UIFontStyle, GraphicsUnit.Pixel);
 
+            var size = TextRenderer.MeasureText("1234567890", tempFont);
+
+            // If we divide by 2, we'll give a decent approximate gutter area
+            // for the amount of whitespace fonts have around them.
+            return new Font(
+                _settings.UIFontName, size.Height / 2f,
+                _settings.UIFontStyle, GraphicsUnit.Pixel);
+        }
+
+        private void UpdateLabelFontLocked()
+        {
+            var newFont = CreateUIFont();
+
             uxBpmLabel.Font = newFont;
-            _lastFont.TryDispose();
-            _lastFont = newFont;
+
+            // This is horrible. I was having issues of potentially racing the
+            // OnPaint of the label and disposing the font. So, ya. This is
+            // the unfortunate result.
+            lock (_lastFonts)
+            {
+                _lastFonts.Enqueue(newFont);
+
+                if (_lastFonts.Count > 10)
+                {
+                    var old = _lastFonts.Dequeue();
+                    old.TryDispose();
+                }
+            }
         }
 
         private void LoadSettingsLocked()
@@ -394,6 +419,7 @@ namespace HeartRate
         {
             UpdateEnumSubmenu(_settings.UITextAlignment, textAlignmentToolStripMenuItem);
             UpdateEnumSubmenu(_settings.UIBackgroundLayout, backgroundImagePositionToolStripMenuItem);
+            doNotScaleFontToolStripMenuItem.Checked = _settings.UIFontUseSize;
         }
 
         private static void UpdateEnumSubmenu<TEnum>(TEnum value, ToolStripMenuItem parent)
@@ -449,6 +475,13 @@ namespace HeartRate
 
         private void HeartRateForm_ResizeEnd(object sender, EventArgs e)
         {
+            lock (_updateSync)
+            {
+                _settings.UIWindowSizeX = Size.Width;
+                _settings.UIWindowSizeY = Size.Height;
+                _settings.Save();
+            }
+
             UpdateLabelFont();
             UpdateUI();
         }
@@ -487,11 +520,11 @@ namespace HeartRate
 
         private void selectIconFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!Prompt.TryFont(_settings.FontName, default, out var font, out _)) return;
+            if (!Prompt.TryFont(_settings.FontName, default, 10, out var font)) return;
 
             lock (_updateSync)
             {
-                _settings.FontName = font;
+                _settings.FontName = font.Name;
                 _settings.Save();
             }
 
@@ -500,12 +533,13 @@ namespace HeartRate
 
         private void selectWindowFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!Prompt.TryFont(_settings.UIFontName, _settings.UIFontStyle, out var font, out var style)) return;
+            if (!Prompt.TryFont(_settings.UIFontName, _settings.UIFontStyle, _settings.UIFontSize, out var font)) return;
 
             lock (_updateSync)
             {
-                _settings.UIFontName = font;
-                _settings.UIFontStyle = style;
+                _settings.UIFontName = font.Name;
+                _settings.UIFontStyle = font.Style;
+                _settings.UIFontSize = (int)font.Size;
                 _settings.Save();
             }
 
@@ -563,6 +597,74 @@ namespace HeartRate
             UpdateSubmenus();
             UpdateUI();
         }
+
+        private void doNotScaleFontToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (_settings)
+            {
+                _settings.UIFontUseSize = !_settings.UIFontUseSize;
+                _settings.Save();
+            }
+
+            UpdateSubmenus();
+            UpdateUI();
+        }
+
+        //protected override void OnPaint(PaintEventArgs e)
+        //{
+        //    //base.OnPaint(e);
+        //
+        //    lock (_updateSync)
+        //    {
+        //        var flags = TextFormatFlags.SingleLine | TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix;
+        //
+        //        switch (_settings.UITextAlignment)
+        //        {
+        //            case ContentAlignment.TopCenter:
+        //            case ContentAlignment.TopLeft:
+        //            case ContentAlignment.TopRight:
+        //                flags |= TextFormatFlags.Top;
+        //                break;
+        //            case ContentAlignment.MiddleCenter:
+        //            case ContentAlignment.MiddleLeft:
+        //            case ContentAlignment.MiddleRight:
+        //                flags |= TextFormatFlags.VerticalCenter;
+        //                break;
+        //            case ContentAlignment.BottomCenter:
+        //            case ContentAlignment.BottomLeft:
+        //            case ContentAlignment.BottomRight:
+        //                flags |= TextFormatFlags.Bottom;
+        //                break;
+        //        }
+        //
+        //        switch (_settings.UITextAlignment)
+        //        {
+        //            case ContentAlignment.TopLeft:
+        //            case ContentAlignment.MiddleLeft:
+        //            case ContentAlignment.BottomLeft:
+        //                flags |= TextFormatFlags.Left;
+        //                break;
+        //            case ContentAlignment.TopCenter:
+        //            case ContentAlignment.MiddleCenter:
+        //            case ContentAlignment.BottomCenter:
+        //                flags |= TextFormatFlags.HorizontalCenter;
+        //                break;
+        //            case ContentAlignment.TopRight:
+        //            case ContentAlignment.MiddleRight:
+        //            case ContentAlignment.BottomRight:
+        //                flags |= TextFormatFlags.Right;
+        //                break;
+        //        }
+        //
+        //        //TextRenderer.DrawText(
+        //        //    e.Graphics, uxBpmLabel.Text, uxBpmLabel.Font,
+        //        //    ClientRectangle, uxBpmLabel.ForeColor, Color.Transparent, flags);
+        //        //
+        //        TextRenderer.DrawText(
+        //            e.Graphics, uxBpmLabel.Text, uxBpmLabel.Font,
+        //            ClientRectangle, uxBpmLabel.ForeColor, Color.Transparent, flags);
+        //    }
+        //}
         #endregion
     }
 }

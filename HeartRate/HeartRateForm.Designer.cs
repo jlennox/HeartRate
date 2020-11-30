@@ -23,17 +23,18 @@
             this.editIconFontWarningColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.selectWindowFontToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.doNotScaleFontToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editWindowFontColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editWindowFontWarningColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.textAlignmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.selectBackgroundImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeBackgroundImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.backgroundImagePositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.uxEditSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uxExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uxBpmLabel = new System.Windows.Forms.Label();
-            this.backgroundImagePositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uxNotifyIconContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -53,6 +54,7 @@
             this.editIconFontWarningColorToolStripMenuItem,
             this.toolStripMenuItem2,
             this.selectWindowFontToolStripMenuItem,
+            this.doNotScaleFontToolStripMenuItem,
             this.editWindowFontColorToolStripMenuItem,
             this.editWindowFontWarningColorToolStripMenuItem,
             this.textAlignmentToolStripMenuItem,
@@ -64,7 +66,7 @@
             this.uxEditSettingsMenuItem,
             this.uxExitMenuItem});
             this.uxNotifyIconContextMenu.Name = "uxNotifyIconContextMenu";
-            this.uxNotifyIconContextMenu.Size = new System.Drawing.Size(296, 338);
+            this.uxNotifyIconContextMenu.Size = new System.Drawing.Size(296, 334);
             this.uxNotifyIconContextMenu.Text = "Background image layout";
             // 
             // selectIconFontToolStripMenuItem
@@ -99,6 +101,15 @@
             this.selectWindowFontToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.selectWindowFontToolStripMenuItem.Text = "Select window font...";
             this.selectWindowFontToolStripMenuItem.Click += new System.EventHandler(this.selectWindowFontToolStripMenuItem_Click);
+            // 
+            // doNotScaleFontToolStripMenuItem
+            // 
+            this.doNotScaleFontToolStripMenuItem.Name = "doNotScaleFontToolStripMenuItem";
+            this.doNotScaleFontToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
+            this.doNotScaleFontToolStripMenuItem.Text = "Do not scale font";
+            this.doNotScaleFontToolStripMenuItem.ToolTipText = "Do not automatically scale the font with the window. The font can be set inside t" +
+    "he \"Select window font\" dialog.";
+            this.doNotScaleFontToolStripMenuItem.Click += new System.EventHandler(this.doNotScaleFontToolStripMenuItem_Click);
             // 
             // editWindowFontColorToolStripMenuItem
             // 
@@ -139,6 +150,12 @@
             this.removeBackgroundImageToolStripMenuItem.Text = "Remove background image";
             this.removeBackgroundImageToolStripMenuItem.Click += new System.EventHandler(this.removeBackgroundImageToolStripMenuItem_Click);
             // 
+            // backgroundImagePositionToolStripMenuItem
+            // 
+            this.backgroundImagePositionToolStripMenuItem.Name = "backgroundImagePositionToolStripMenuItem";
+            this.backgroundImagePositionToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
+            this.backgroundImagePositionToolStripMenuItem.Text = "Background image position";
+            // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
@@ -164,6 +181,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.uxBpmLabel.ContextMenuStrip = this.uxNotifyIconContextMenu;
+            this.uxBpmLabel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.uxBpmLabel.Location = new System.Drawing.Point(0, 0);
             this.uxBpmLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.uxBpmLabel.Name = "uxBpmLabel";
@@ -171,18 +189,14 @@
             this.uxBpmLabel.TabIndex = 0;
             this.uxBpmLabel.Text = "Starting...";
             this.uxBpmLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // backgroundImagePositionToolStripMenuItem
-            // 
-            this.backgroundImagePositionToolStripMenuItem.Name = "backgroundImagePositionToolStripMenuItem";
-            this.backgroundImagePositionToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
-            this.backgroundImagePositionToolStripMenuItem.Text = "Background image position";
+            this.uxBpmLabel.UseCompatibleTextRendering = true;
             // 
             // HeartRateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(411, 138);
+            this.ContextMenuStrip = this.uxNotifyIconContextMenu;
             this.Controls.Add(this.uxBpmLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Margin = new System.Windows.Forms.Padding(4);
@@ -216,6 +230,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem textAlignmentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem backgroundImagePositionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem doNotScaleFontToolStripMenuItem;
     }
 }
 

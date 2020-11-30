@@ -18,7 +18,7 @@ namespace HeartRate
         {
             _timeout = timeout;
             _service = service ?? throw new ArgumentNullException(nameof(service));
-            _service.HeartRateUpdated += _service_HeartRateUpdated;
+            _service.HeartRateUpdated += Service_HeartRateUpdated;
 
             var thread = new Thread(WatchdogThread)
             {
@@ -29,7 +29,7 @@ namespace HeartRate
             thread.Start();
         }
 
-        private void _service_HeartRateUpdated(HeartRateReading reading)
+        private void Service_HeartRateUpdated(HeartRateReading reading)
         {
             lock (_sync)
             {

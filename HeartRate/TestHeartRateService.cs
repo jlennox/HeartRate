@@ -22,7 +22,7 @@ namespace HeartRate
         private int _count;
         private readonly object _sync = new object();
 
-        public TestHeartRateService() : this(TimeSpan.FromSeconds(1))
+        public TestHeartRateService() : this(TimeSpan.FromMilliseconds(200))
         {
         }
 
@@ -42,12 +42,7 @@ namespace HeartRate
 
             lock (_sync)
             {
-                count = _count = ++_count;
-
-                if (count >= HeartRates.Length)
-                {
-                    return;
-                }
+                count = (_count = ++_count) % HeartRates.Length;
             }
 
             HeartRateUpdated?.Invoke(HeartRates[count]);
