@@ -20,11 +20,17 @@ the computer. I create my own due to lack of available software.
 The program's secondary purpose is for Twitch streamers. After looking
 into streamer setups I saw an excessive mix of hardware and software was needed.
 I am not a Twitch streamer but **I am willing to add the customizations needed
-byrequest.**
+by request.**
 
 Change log
 ----------
-**1.6**
+**1.7** November 30th, 2020
+* Added text alignment option. (#17)
+* Added window size being saved. (#17)
+* Added font size and style selected in font dialog being used. (#17)
+* Fixed a potential deadlock. (#17)
+
+**1.6** September 27th, 2020
 * Added support for Energy Expended and RR-Intervals readings writing to logfile.
 * Added support for IBI file output.
 * Fixed logfiles containing date variables not working correctly.
@@ -91,6 +97,8 @@ The file is `%appdata%\HeartRate\settings.xml`
 |------------|------|----------|-------------|
 | `FontName` | text | Arial | The font name for the system tray icon. |
 | `UIFontName` | text | Arial | The font name for the window display. |
+| `UIFontStyle` | text | Regular | The font style for the window. Multiple styles can be specified by comma separation. `Regular`, `Bold`, `Italic`, `Underline`, `Strikeout`. |
+| `UITextAlignment` | text | MiddleCenter | The alignment of the text in the UI. Can be `TopLeft`, `TopCenter`, `TopRight`, `MiddleLeft`, `MiddleCenter`, `MiddleRight`, `BottomLeft`, `BottomCenter`, `BottomRight`. |
 | `Color` | color | FFADD8E6 | The default color for the system tray icon. |
 | `WarnColor` | color | FFFF0000 | The system tray icon color once `WarnLevel` has been met. |
 | `UIColor` | color | FF00008B | The default color for the window display. |
