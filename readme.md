@@ -20,11 +20,17 @@ the computer. I create my own due to lack of available software.
 The program's secondary purpose is for Twitch streamers. After looking
 into streamer setups I saw an excessive mix of hardware and software was needed.
 I am not a Twitch streamer but **I am willing to add the customizations needed
-byrequest.**
+by request.**
 
 Change log
 ----------
-**1.6**
+**1.7** November 30th, 2020
+* Added text alignment option. (#17)
+* Added window size being saved. (#17)
+* Added font size and style selected in font dialog being used. (#17)
+* Fixed a potential deadlock. (#17)
+
+**1.6** September 27th, 2020
 * Added support for Energy Expended and RR-Intervals readings writing to logfile.
 * Added support for IBI file output.
 * Fixed logfiles containing date variables not working correctly.
@@ -64,20 +70,35 @@ Twitch streamers to be able to region for broadcast.
 
 Settings
 --------
+Most settings are exposed in the UI through a context menu by right clicking the
+main window or the system tray icon. The rest can be accessed by editing the XML
+settings file directly.
+
+*Options not inside the UI*
 Right clicking the system tray icon gives the option to edit an XML settings
 file. When the editor is closed, the settings will be reloaded automatically.
 The file is `%appdata%\HeartRate\settings.xml`
 
-`color` values are formatted as 32bit ARGB hex values. Leading 0's are optional.
+| Setting    | Type | Default  | Description |
+|------------|------|----------|-------------|
+| `Sizable` | bool | true | If the window is a normal sizable window. `false` looks better but is not recognized by OBS as a window. |
+| `LogFormat` | text | csv | The format to write to the LogFile. Only "csv" is valid. |
+| `LogDateFormat` | text | OA | The format to write the date column as. See `Datetime formatting.` |
+| `LogFile` | text | *empty* | The full path of where to write the logged data to. If empty, no file log is kept. A `%date%` token can be included to substitute in the date. A custom formatter can be included, such as `%date:MM-dd-yyyy%` Example: `C:\users\joe\desktop\heartrate-%date%.csv`  |
+| `IBIFile` | text | *empty* | The full path of where to write the IBI data to. Writes log of RR-Intervals in milliseconds in IBI supported file format. Supports date syntax like `LogFile` does. |
+| `AlertLevel` | number | 65 | The heart rate to display a system tray notification balloon at. 0 to disable. |
+| `WarnLevel` | number | 70 | The heart rate to use `WarnColor` at. 0 to disable. |
+| `AlertTimeout` | number | 120000 | The amount of milliseconds to cooldown for being able to show an alert after one was shown. |
+| `DisconnectedTimeout` | number | 10000 | The amount of milliseconds after disconnecting to await for a valid device connection before displaying "X" |
+
+*Settings also exposed by the UI*
 
 | Setting    | Type | Default  | Description |
 |------------|------|----------|-------------|
 | `FontName` | text | Arial | The font name for the system tray icon. |
 | `UIFontName` | text | Arial | The font name for the window display. |
-| `AlertLevel` | number | 65 | The heart rate to display a system tray notification balloon at. 0 to disable. |
-| `WarnLevel` | number | 70 | The heart rate to use `WarnColor` at. 0 to disable. |
-| `AlertTimeout` | number | 120000 | The amount of milliseconds to cooldown for being able to show an alert after one was shown. |
-| `DisconnectedTimeout` | number | 10000 | The amount of milliseconds after disconnecting to await for a valid device connection before displaying "X" |
+| `UIFontStyle` | text | Regular | The font style for the window. Multiple styles can be specified by comma separation. `Regular`, `Bold`, `Italic`, `Underline`, `Strikeout`. |
+| `UITextAlignment` | text | MiddleCenter | The alignment of the text in the UI. Can be `TopLeft`, `TopCenter`, `TopRight`, `MiddleLeft`, `MiddleCenter`, `MiddleRight`, `BottomLeft`, `BottomCenter`, `BottomRight`. |
 | `Color` | color | FFADD8E6 | The default color for the system tray icon. |
 | `WarnColor` | color | FFFF0000 | The system tray icon color once `WarnLevel` has been met. |
 | `UIColor` | color | FF00008B | The default color for the window display. |
@@ -85,11 +106,11 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `UIBackgroundColor` | color | 00FFFFFF | The background color for the window display. |
 | `UIBackgroundFile` | text | *empty* | The full path of a background image. |
 | `UIBackgroundLayout` | text | Stretch | The background image display layout. Possible values: `None`, `Tile`, `Center`, `Stretch`, and `Zoom`. [More information.](https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.imagelayout) |
-| `Sizable` | bool | true | If the window is a normal sizable window. `false` looks better but is not recognized by OBS as a window. |
-| `LogFormat` | text | csv | The format to write to the LogFile. Only "csv" is valid. |
-| `LogDateFormat` | text | OA | The format to write the date column as. See `Datetime formatting.` |
-| `LogFile` | text | *empty* | The full path of where to write the logged data to. If empty, no file log is kept. A `%date%` token can be included to substitute in the date. A custom formatter can be included, such as `%date:MM-dd-yyyy%` Example: `C:\users\joe\desktop\heartrate-%date%.csv`  |
-| `IBIFile` | text | *empty* | The full path of where to write the IBI data to. Writes log of RR-Intervals in milliseconds in IBI supported file format. Supports date syntax like `LogFile` does. |
+| `UIFontUseSize` | bool | false | Should the size in `UIFontSize` or selected from the Font dialog be used. If `false`, the font size scales automatically with the window. |
+| `UIFontSize` | number | 20 | The size of the font if `UIFontUseSize` is `true`. |
+| `UIWindowSizeX`/`UIWindowSizeY` | number | 350/250 | The saved window size. This is automatically saved when resizing. |
+
+`color` values are formatted as 32bit ARGB hex values. Leading 0's are optional.
 
 ### Datetime formatting
 Datetime formatting is done using the standard C# syntax. One special exception

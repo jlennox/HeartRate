@@ -17,9 +17,17 @@ namespace HeartRate
         // See note in Load for how to version the file.
         private const int _settingsVersion = 1;
 
+        public Size UIWindowSize => new Size(UIWindowSizeX, UIWindowSizeY);
+
         public int Version;
         public string FontName;
         public string UIFontName;
+        public bool UIFontUseSize;
+        public FontStyle UIFontStyle;
+        public int UIFontSize;
+        public int UIWindowSizeX;
+        public int UIWindowSizeY;
+        public ContentAlignment UITextAlignment;
         public int AlertLevel;
         public int WarnLevel;
         public TimeSpan AlertTimeout;
@@ -48,6 +56,12 @@ namespace HeartRate
                 Version = _settingsVersion,
                 FontName = "Arial",
                 UIFontName = "Arial",
+                UIFontStyle = FontStyle.Regular,
+                UIFontSize = 20,
+                UIFontUseSize = false,
+                UIWindowSizeX = 350,
+                UIWindowSizeY = 250,
+                UITextAlignment = ContentAlignment.MiddleCenter,
                 WarnLevel = 65,
                 AlertLevel = 70,
                 AlertTimeout = TimeSpan.FromMinutes(2),
@@ -83,6 +97,12 @@ namespace HeartRate
 
             FontName = protocol.FontName;
             UIFontName = protocol.UIFontName;
+            UIFontStyle = EnumOrDefault(protocol.UIFontStyle, FontStyle.Regular);
+            UIFontSize = protocol.UIFontSize ?? 20;
+            UIFontUseSize = protocol.UIFontUseSize;
+            UIWindowSizeX = protocol.UIWindowSizeX;
+            UIWindowSizeY = protocol.UIWindowSizeY;
+            UITextAlignment = EnumOrDefault(protocol.UITextAlignment, ContentAlignment.MiddleCenter);
             AlertLevel = protocol.AlertLevel;
             WarnLevel = protocol.WarnLevel;
             AlertTimeout = TimeSpan.FromMilliseconds(protocol.AlertTimeout);
@@ -93,17 +113,29 @@ namespace HeartRate
             UIWarnColor = ColorFromString(protocol.UIWarnColor);
             UIBackgroundColor = ColorFromString(protocol.UIBackgroundColor);
             UIBackgroundFile = protocol.UIBackgroundFile;
-            UIBackgroundLayout = Enum.TryParse<ImageLayout>(
-                    protocol.UIBackgroundLayout, true, out var layout)
-                ? layout : ImageLayout.Stretch;
+            UIBackgroundLayout = EnumOrDefault(protocol.UIBackgroundLayout, ImageLayout.Stretch);
             Sizable = protocol.Sizable;
             LogFormat = protocol.LogFormat;
             LogDateFormat = protocol.LogDateFormat;
             LogFile = protocol.LogFile;
             IBIFile = protocol.IBIFile;
 
+            // A hack fix from a bug that's been fixed.
+            if (UITextAlignment == 0) UITextAlignment = ContentAlignment.MiddleCenter;
+            if (UIFontSize <= 0) UIFontSize = 20;
+            if (UIWindowSizeX <= 0) UIWindowSizeX = 350;
+            if (UIWindowSizeY <= 0) UIWindowSizeY = 250;
+
             // In the future:
             // if (protocol.Version >= 2) ...
+        }
+
+        private static TEnum EnumOrDefault<TEnum>(string input, TEnum defaultValue)
+            where TEnum : struct
+        {
+            return Enum.TryParse<TEnum>(
+                input, true, out var parsed)
+                ? parsed : defaultValue;
         }
 
         public HeartRateSettings Clone()
@@ -113,6 +145,12 @@ namespace HeartRate
                 Version = Version,
                 FontName = FontName,
                 UIFontName = UIFontName,
+                UIFontStyle = UIFontStyle,
+                UIFontUseSize = UIFontUseSize,
+                UIFontSize = UIFontSize,
+                UIWindowSizeX = UIWindowSizeX,
+                UIWindowSizeY = UIWindowSizeY,
+                UITextAlignment = UITextAlignment,
                 AlertLevel = AlertLevel,
                 WarnLevel = WarnLevel,
                 AlertTimeout = AlertTimeout,
@@ -180,6 +218,12 @@ namespace HeartRate
         public int Version { get; set; }
         public string FontName { get; set; }
         public string UIFontName { get; set; }
+        public string UIFontStyle { get; set; }
+        public bool UIFontUseSize { get; set; }
+        public int? UIFontSize { get; set; }
+        public int UIWindowSizeX { get; set; }
+        public int UIWindowSizeY { get; set; }
+        public string UITextAlignment { get; set; }
         public int AlertLevel { get; set; }
         public int WarnLevel { get; set; }
         public int AlertTimeout { get; set; }
@@ -208,6 +252,12 @@ namespace HeartRate
             FontName = settings.FontName;
             AlertLevel = settings.AlertLevel;
             UIFontName = settings.UIFontName;
+            UIFontStyle = settings.UIFontStyle.ToString();
+            UIFontUseSize = settings.UIFontUseSize;
+            UIFontSize = settings.UIFontSize;
+            UIWindowSizeX = settings.UIWindowSizeX;
+            UIWindowSizeY = settings.UIWindowSizeY;
+            UITextAlignment = settings.UITextAlignment.ToString();
             WarnLevel = settings.WarnLevel;
             AlertTimeout = (int)settings.AlertTimeout.TotalMilliseconds;
             DisconnectedTimeout = (int)settings.DisconnectedTimeout.TotalMilliseconds;

@@ -15,6 +15,12 @@ namespace Lennox.HeartRate.Tests
   <Version>1</Version>
   <FontName>Arial</FontName>
   <UIFontName>Arial</UIFontName>
+  <UIFontStyle>Regular</UIFontStyle>
+  <UIFontUseSize>false</UIFontUseSize>
+  <UIFontSize>20</UIFontSize>
+  <UIWindowSizeX>350</UIWindowSizeX>
+  <UIWindowSizeY>250</UIWindowSizeY>
+  <UITextAlignment>MiddleCenter</UITextAlignment>
   <AlertLevel>70</AlertLevel>
   <WarnLevel>65</WarnLevel>
   <AlertTimeout>120000</AlertTimeout>
@@ -24,10 +30,12 @@ namespace Lennox.HeartRate.Tests
   <UIColor>FF00008B</UIColor>
   <UIWarnColor>FFFF0000</UIWarnColor>
   <UIBackgroundColor>00FFFFFF</UIBackgroundColor>
+  <UIBackgroundLayout>Stretch</UIBackgroundLayout>
   <Sizable>true</Sizable>
   <LogFormat>csv</LogFormat>
   <LogDateFormat>OA</LogDateFormat>
   <LogFile> </LogFile>
+  <IBIFile> </IBIFile>
 </HeartRateSettingsProtocol>";
 
             using (var tempFile = new TempFile())

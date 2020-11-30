@@ -12,7 +12,7 @@ namespace HeartRate
 
         private readonly string _filename;
 
-        public FileWriter(string filename)
+        protected FileWriter(string filename)
         {
             _filename = filename;
         }

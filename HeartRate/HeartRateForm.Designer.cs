@@ -23,12 +23,14 @@
             this.editIconFontWarningColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.selectWindowFontToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.doNotScaleFontToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editWindowFontColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editWindowFontWarningColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.textAlignmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.selectBackgroundImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeBackgroundImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.selectBackgroundLayoutToolStripMenuItem = new System.Windows.Forms.ToolStripComboBox();
+            this.backgroundImagePositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.uxEditSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uxExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,115 +54,124 @@
             this.editIconFontWarningColorToolStripMenuItem,
             this.toolStripMenuItem2,
             this.selectWindowFontToolStripMenuItem,
+            this.doNotScaleFontToolStripMenuItem,
             this.editWindowFontColorToolStripMenuItem,
             this.editWindowFontWarningColorToolStripMenuItem,
+            this.textAlignmentToolStripMenuItem,
             this.toolStripSeparator1,
             this.selectBackgroundImageToolStripMenuItem,
             this.removeBackgroundImageToolStripMenuItem,
-            this.selectBackgroundLayoutToolStripMenuItem,
+            this.backgroundImagePositionToolStripMenuItem,
             this.toolStripMenuItem1,
             this.uxEditSettingsMenuItem,
             this.uxExitMenuItem});
             this.uxNotifyIconContextMenu.Name = "uxNotifyIconContextMenu";
-            this.uxNotifyIconContextMenu.Size = new System.Drawing.Size(356, 294);
+            this.uxNotifyIconContextMenu.Size = new System.Drawing.Size(296, 334);
             this.uxNotifyIconContextMenu.Text = "Background image layout";
             // 
             // selectIconFontToolStripMenuItem
             // 
             this.selectIconFontToolStripMenuItem.Name = "selectIconFontToolStripMenuItem";
-            this.selectIconFontToolStripMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.selectIconFontToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.selectIconFontToolStripMenuItem.Text = "Select icon font...";
             this.selectIconFontToolStripMenuItem.Click += new System.EventHandler(this.selectIconFontToolStripMenuItem_Click);
             // 
             // editFontColorToolStripMenuItem
             // 
             this.editFontColorToolStripMenuItem.Name = "editFontColorToolStripMenuItem";
-            this.editFontColorToolStripMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.editFontColorToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.editFontColorToolStripMenuItem.Text = "Edit icon font color...";
             this.editFontColorToolStripMenuItem.Click += new System.EventHandler(this.editFontColorToolStripMenuItem_Click);
             // 
             // editIconFontWarningColorToolStripMenuItem
             // 
             this.editIconFontWarningColorToolStripMenuItem.Name = "editIconFontWarningColorToolStripMenuItem";
-            this.editIconFontWarningColorToolStripMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.editIconFontWarningColorToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.editIconFontWarningColorToolStripMenuItem.Text = "Edit icon font warning color...";
             this.editIconFontWarningColorToolStripMenuItem.Click += new System.EventHandler(this.editIconFontWarningColorToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(352, 6);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(292, 6);
             // 
             // selectWindowFontToolStripMenuItem
             // 
             this.selectWindowFontToolStripMenuItem.Name = "selectWindowFontToolStripMenuItem";
-            this.selectWindowFontToolStripMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.selectWindowFontToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.selectWindowFontToolStripMenuItem.Text = "Select window font...";
             this.selectWindowFontToolStripMenuItem.Click += new System.EventHandler(this.selectWindowFontToolStripMenuItem_Click);
+            // 
+            // doNotScaleFontToolStripMenuItem
+            // 
+            this.doNotScaleFontToolStripMenuItem.Name = "doNotScaleFontToolStripMenuItem";
+            this.doNotScaleFontToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
+            this.doNotScaleFontToolStripMenuItem.Text = "Do not scale font";
+            this.doNotScaleFontToolStripMenuItem.ToolTipText = "Do not automatically scale the font with the window. The font can be set inside t" +
+    "he \"Select window font\" dialog.";
+            this.doNotScaleFontToolStripMenuItem.Click += new System.EventHandler(this.doNotScaleFontToolStripMenuItem_Click);
             // 
             // editWindowFontColorToolStripMenuItem
             // 
             this.editWindowFontColorToolStripMenuItem.Name = "editWindowFontColorToolStripMenuItem";
-            this.editWindowFontColorToolStripMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.editWindowFontColorToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.editWindowFontColorToolStripMenuItem.Text = "Edit window font color...";
             this.editWindowFontColorToolStripMenuItem.Click += new System.EventHandler(this.editWindowFontColorToolStripMenuItem_Click);
             // 
             // editWindowFontWarningColorToolStripMenuItem
             // 
             this.editWindowFontWarningColorToolStripMenuItem.Name = "editWindowFontWarningColorToolStripMenuItem";
-            this.editWindowFontWarningColorToolStripMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.editWindowFontWarningColorToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.editWindowFontWarningColorToolStripMenuItem.Text = "Edit window font warning color...";
             this.editWindowFontWarningColorToolStripMenuItem.Click += new System.EventHandler(this.editWindowFontWarningColorToolStripMenuItem_Click);
+            // 
+            // textAlignmentToolStripMenuItem
+            // 
+            this.textAlignmentToolStripMenuItem.Name = "textAlignmentToolStripMenuItem";
+            this.textAlignmentToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
+            this.textAlignmentToolStripMenuItem.Text = "Text alignment";
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(352, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(292, 6);
             // 
             // selectBackgroundImageToolStripMenuItem
             // 
             this.selectBackgroundImageToolStripMenuItem.Name = "selectBackgroundImageToolStripMenuItem";
-            this.selectBackgroundImageToolStripMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.selectBackgroundImageToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.selectBackgroundImageToolStripMenuItem.Text = "Select background image...";
             this.selectBackgroundImageToolStripMenuItem.Click += new System.EventHandler(this.selectBackgroundImageToolStripMenuItem_Click);
             // 
             // removeBackgroundImageToolStripMenuItem
             // 
             this.removeBackgroundImageToolStripMenuItem.Name = "removeBackgroundImageToolStripMenuItem";
-            this.removeBackgroundImageToolStripMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.removeBackgroundImageToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
             this.removeBackgroundImageToolStripMenuItem.Text = "Remove background image";
             this.removeBackgroundImageToolStripMenuItem.Click += new System.EventHandler(this.removeBackgroundImageToolStripMenuItem_Click);
             // 
-            // selectBackgroundLayoutToolStripMenuItem
+            // backgroundImagePositionToolStripMenuItem
             // 
-            this.selectBackgroundLayoutToolStripMenuItem.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.selectBackgroundLayoutToolStripMenuItem.Items.AddRange(new object[] {
-            "None",
-            "Tile",
-            "Center",
-            "Stretch",
-            "Zoom"});
-            this.selectBackgroundLayoutToolStripMenuItem.Name = "selectBackgroundLayoutToolStripMenuItem";
-            this.selectBackgroundLayoutToolStripMenuItem.Size = new System.Drawing.Size(295, 28);
-            this.selectBackgroundLayoutToolStripMenuItem.Text = "Zoom";
-            this.selectBackgroundLayoutToolStripMenuItem.SelectedIndexChanged += new System.EventHandler(this.selectBackgroundLayoutToolStripMenuItem_SelectedIndexChanged);
+            this.backgroundImagePositionToolStripMenuItem.Name = "backgroundImagePositionToolStripMenuItem";
+            this.backgroundImagePositionToolStripMenuItem.Size = new System.Drawing.Size(295, 24);
+            this.backgroundImagePositionToolStripMenuItem.Text = "Background image position";
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(352, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(292, 6);
             // 
             // uxEditSettingsMenuItem
             // 
             this.uxEditSettingsMenuItem.Name = "uxEditSettingsMenuItem";
-            this.uxEditSettingsMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.uxEditSettingsMenuItem.Size = new System.Drawing.Size(295, 24);
             this.uxEditSettingsMenuItem.Text = "Edit settings XML...";
             this.uxEditSettingsMenuItem.Click += new System.EventHandler(this.uxMenuEditSettings_Click);
             // 
             // uxExitMenuItem
             // 
             this.uxExitMenuItem.Name = "uxExitMenuItem";
-            this.uxExitMenuItem.Size = new System.Drawing.Size(355, 24);
+            this.uxExitMenuItem.Size = new System.Drawing.Size(295, 24);
             this.uxExitMenuItem.Text = "Exit";
             this.uxExitMenuItem.Click += new System.EventHandler(this.uxExitMenuItem_Click);
             // 
@@ -170,18 +181,22 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.uxBpmLabel.ContextMenuStrip = this.uxNotifyIconContextMenu;
+            this.uxBpmLabel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.uxBpmLabel.Location = new System.Drawing.Point(0, 0);
             this.uxBpmLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.uxBpmLabel.Name = "uxBpmLabel";
             this.uxBpmLabel.Size = new System.Drawing.Size(412, 139);
             this.uxBpmLabel.TabIndex = 0;
             this.uxBpmLabel.Text = "Starting...";
+            this.uxBpmLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.uxBpmLabel.UseCompatibleTextRendering = true;
             // 
             // HeartRateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(411, 138);
+            this.ContextMenuStrip = this.uxNotifyIconContextMenu;
             this.Controls.Add(this.uxBpmLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Margin = new System.Windows.Forms.Padding(4);
@@ -212,8 +227,10 @@
         private System.Windows.Forms.ToolStripMenuItem selectWindowFontToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectBackgroundImageToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeBackgroundImageToolStripMenuItem;
-        private System.Windows.Forms.ToolStripComboBox selectBackgroundLayoutToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem textAlignmentToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem backgroundImagePositionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem doNotScaleFontToolStripMenuItem;
     }
 }
 
