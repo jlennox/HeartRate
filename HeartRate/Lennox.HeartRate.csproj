@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="platform">
-      <HintPath>%programfiles(x86)%\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.VCLibs\11.0\References\CommonConfiguration\neutral\platform.winmd</HintPath>
+      <HintPath>$(MSBuildProjectDirectory)\windows-sdk\platform.winmd</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -51,7 +51,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Windows">
-      <HintPath>%programfiles(x86)%\Windows Kits\8.1\References\CommonConfiguration\Neutral\Windows.winmd</HintPath>
+      <HintPath>$(MSBuildProjectDirectory)\windows-sdk\Windows.winmd</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

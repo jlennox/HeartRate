@@ -6,32 +6,27 @@ using System.Text;
 
 namespace HeartRate
 {
-    internal abstract class FileWriter : IDisposable
+    internal abstract class FileWriter
     {
-        protected bool HasFileWriter => _fs != null;
+        protected bool HasFileWriter => _filename != null;
 
-        private readonly FileStream _fs;
+        private readonly string _filename;
 
         protected FileWriter(string filename)
         {
-            if (filename == null) return;
-
-            _fs = File.Open(filename, FileMode.Append,
-                FileAccess.Write, FileShare.ReadWrite);
+            _filename = filename;
         }
 
         public void WriteLine(string s)
         {
-            if (_fs == null) return;
+            if (_filename == null) return;
+
+            using var fs = File.Open(_filename, FileMode.Append,
+                FileAccess.Write, FileShare.ReadWrite);
 
             var bytes = Encoding.UTF8.GetBytes(s + "\r\n");
-            _fs.Write(bytes, 0, bytes.Length);
-            _fs.Flush();
-        }
-
-        public void Dispose()
-        {
-            _fs.TryDispose();
+            fs.Write(bytes, 0, bytes.Length);
+            fs.Flush();
         }
     }
 
