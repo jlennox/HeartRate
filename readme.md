@@ -24,6 +24,9 @@ by request.**
 
 Change log
 ----------
+**1.7.1** December 29th, 2020
+* Fixed font size in dialog not being what was entered. (#19)
+
 **1.7** November 30th, 2020
 * Added text alignment option. (#17)
 * Added window size being saved. (#17)
