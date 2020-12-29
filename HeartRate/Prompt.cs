@@ -18,22 +18,23 @@ namespace HeartRate
 
             color = dlg.Color;
             return true;
-
         }
 
         public static bool TryFont(
-            string currentFond,
+            string currentFont,
             FontStyle currentStyle,
             int currentSize,
             out Font font)
         {
             font = default;
 
-            using var dlgFont = new Font(currentFond, currentSize, currentStyle, GraphicsUnit.Pixel);
+            // Even though it's not really in "points," this prevents it from converting our PX size to Points, and
+            // any conversion roundings that would happen.
+            using var dlgFont = new Font(currentFont, currentSize, currentStyle, GraphicsUnit.Point);
             using var dlg = new FontDialog
             {
                 FontMustExist = true,
-                Font = dlgFont,
+                Font = dlgFont
             };
 
             if (dlg.ShowDialog() != DialogResult.OK) return false;
@@ -57,7 +58,6 @@ namespace HeartRate
 
             file = dlg.FileName;
             return true;
-
         }
     }
 }
