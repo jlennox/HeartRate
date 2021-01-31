@@ -161,3 +161,8 @@ Windows Registry Editor Version 5.00
 
 Wanting to remain lightweight and not having an installer, this is not handled
 automatically by the program.
+
+Icon Credit
+--------
+
+[Heart icon](https://www.iconfinder.com/icons/299063/heart_icon) made by Paomedia.
