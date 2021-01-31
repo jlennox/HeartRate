@@ -5,11 +5,16 @@ A lightweight program to display the heart rate reading from a
 [Bluetooth Low Energy device](https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml).
 
 This has only been tested on a [Polar H7](https://www.amazon.com/dp/B007S088F4) (non-referral link) but others should work.
-Polar OH1 and Polar 10 are reported as working.
+
+Reportedly working devices include:
+* Polar H7, Polar OH1, Polar 10
+* Coospo HRM
 
 Requires Windows 8.1 or newer.
 
 The executable and code are released under MIT license.
+
+Code can be built using [Visual Studio Community 2019](https://visualstudio.microsoft.com/vs/).
 
 Motivation
 ----------
