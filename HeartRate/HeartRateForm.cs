@@ -123,6 +123,8 @@ namespace HeartRate
         {
             try
             {
+                // _leaktest is not set to true in program execution, just manually for testing
+#pragma warning disable 162
                 if (_leaktest)
                 {
                     for (var i = 0; i < 4000; ++i)
@@ -132,6 +134,7 @@ namespace HeartRate
 
                     return;
                 }
+#pragma warning restore 162
 
                 Service_HeartRateUpdatedCore(reading);
             }
