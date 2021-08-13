@@ -17,16 +17,29 @@ namespace HeartRate
             _filename = filename;
         }
 
-        public void WriteLine(string s)
+        protected void WriteLine(string s)
         {
             if (_filename == null) return;
 
-            using var fs = File.Open(_filename, FileMode.Append,
-                FileAccess.Write, FileShare.ReadWrite);
-
+            using var fs = SharedOpen(FileMode.Append);
             var bytes = Encoding.UTF8.GetBytes(s + "\r\n");
             fs.Write(bytes, 0, bytes.Length);
             fs.Flush();
+        }
+
+        protected void Write(string s)
+        {
+            if (_filename == null) return;
+
+            using var fs = SharedOpen(FileMode.Create);
+            var bytes = Encoding.UTF8.GetBytes(s);
+            fs.Write(bytes, 0, bytes.Length);
+            fs.Flush();
+        }
+
+        protected FileStream SharedOpen(FileMode mode)
+        {
+            return File.Open(_filename, mode, FileAccess.Write, FileShare.ReadWrite);
         }
     }
 
@@ -93,6 +106,17 @@ namespace HeartRate
             {
                 WriteLine(data);
             }
+        }
+    }
+
+    internal class HeartRateFile : FileWriter
+    {
+        public HeartRateFile(string filename) : base(filename) { }
+
+        public void Reading(HeartRateReading reading)
+        {
+            if (!HasFileWriter) return;
+            Write(reading.BeatsPerMinute.ToString());
         }
     }
 }

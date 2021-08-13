@@ -11,8 +11,7 @@ namespace HeartRate
     {
         private readonly string _filename;
 
-        private static readonly Lazy<string> _generatedFilename =
-            new Lazy<string>(GetFilenameCore);
+        private static readonly Lazy<string> _generatedFilename = new(GetFilenameCore);
 
         // See note in Load for how to version the file.
         private const int _settingsVersion = 1;
@@ -44,6 +43,7 @@ namespace HeartRate
         public string LogDateFormat;
         public string LogFile;
         public string IBIFile;
+        public string HeartRateFile;
 
         public HeartRateSettings(string filename)
         {
@@ -77,7 +77,8 @@ namespace HeartRate
                 LogFormat = "csv",
                 LogDateFormat = DateTimeFormatter.DefaultColumn,
                 LogFile = " ", // Initialize to " " instead of null so the entry is still written.
-                IBIFile = " "
+                IBIFile = " ",
+                HeartRateFile = " "
             };
         }
 
@@ -119,6 +120,7 @@ namespace HeartRate
             LogDateFormat = protocol.LogDateFormat;
             LogFile = protocol.LogFile;
             IBIFile = protocol.IBIFile;
+            HeartRateFile = protocol.HeartRateFile;
 
             // A hack fix from a bug that's been fixed.
             if (UITextAlignment == 0) UITextAlignment = ContentAlignment.MiddleCenter;
@@ -167,6 +169,7 @@ namespace HeartRate
                 LogDateFormat = LogDateFormat,
                 LogFile = LogFile,
                 IBIFile = IBIFile,
+                HeartRateFile = HeartRateFile,
             };
         }
 
@@ -240,6 +243,7 @@ namespace HeartRate
         public string LogDateFormat { get; set; }
         public string LogFile { get; set; }
         public string IBIFile { get; set; }
+        public string HeartRateFile { get; set; }
         // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
 
         // Required by deserializer.
@@ -273,6 +277,7 @@ namespace HeartRate
             LogDateFormat = settings.LogDateFormat ?? DateTimeFormatter.DefaultColumn;
             LogFile = settings.LogFile ?? " ";
             IBIFile = settings.IBIFile ?? " ";
+            HeartRateFile = settings.HeartRateFile ?? " ";
         }
 
         private static string ColorToString(Color color)
@@ -296,11 +301,9 @@ namespace HeartRate
             }
 
             // Exception timebomb #1
-            using (var fs = File.OpenRead(filename))
-            {
-                // Exception timebomb #2
-                return _serializer.Deserialize(fs) as HeartRateSettingsProtocol;
-            }
+            using var fs = File.OpenRead(filename);
+            // Exception timebomb #2
+            return _serializer.Deserialize(fs) as HeartRateSettingsProtocol;
         }
 
         internal static void Save(HeartRateSettings settings, string filename)
@@ -309,11 +312,8 @@ namespace HeartRate
 
             var protocol = new HeartRateSettingsProtocol(settings);
 
-            using (var fs = File.Open(filename,
-                FileMode.Create, FileAccess.Write))
-            {
-                _serializer.Serialize(fs, protocol);
-            }
+            using var fs = File.Open(filename, FileMode.Create, FileAccess.Write);
+            _serializer.Serialize(fs, protocol);
         }
     }
 }

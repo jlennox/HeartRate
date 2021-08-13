@@ -123,4 +123,10 @@
   <metadata name="uxNotifyIconContextMenu.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>163, 17</value>
   </metadata>
+  <data name="setCSVOutputFileToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>The full path of where to write the logged data to. If empty, no file log is kept. A `%date%` token can be included to substitute in the date. A custom formatter can be included, such as `%date:MM-dd-yyyy%` Example: `C:\users\joe\desktop\heartrate-%date%.csv`</value>
+  </data>
+  <data name="setHeartRateFileToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>The full path of where to write the last heart rate to. Anything previously in the file is overwritten. Only the the most present heart rate will exist in the file. Supports date syntax like `LogFile` does.</value>
+  </data>
 </root>
