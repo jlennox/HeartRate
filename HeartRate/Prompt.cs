@@ -59,5 +59,21 @@ namespace HeartRate
             file = dlg.FileName;
             return true;
         }
+
+        public static bool TrySaveFile(string current, string filter, out string file)
+        {
+            file = default;
+
+            using var dlg = new SaveFileDialog
+            {
+                FileName = current,
+                Filter = filter
+            };
+
+            if (dlg.ShowDialog() != DialogResult.OK) return false;
+
+            file = dlg.FileName;
+            return true;
+        }
     }
 }

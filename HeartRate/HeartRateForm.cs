@@ -34,6 +34,7 @@ namespace HeartRate
         private readonly HeartRateServiceWatchdog _watchdog;
         private LogFile _log;
         private IBIFile _ibi;
+        private HeartRateFile _hrfile;
         private HeartRateSettings _lastSettings;
 
         private string _iconText;
@@ -150,6 +151,7 @@ namespace HeartRate
         {
             _log?.Reading(reading);
             _ibi?.Reading(reading);
+            _hrfile?.Reading(reading);
 
             var bpm = reading.BeatsPerMinute;
             var status = reading.Status;
@@ -389,9 +391,14 @@ namespace HeartRate
         private void LoadSettingsLocked()
         {
             _settings.Load();
+            LoadSettingsFilesLocked();
+        }
 
+        private void LoadSettingsFilesLocked()
+        {
             _log = new LogFile(_settings, FormatFilename(_settings.LogFile));
             _ibi = new IBIFile(FormatFilename(_settings.IBIFile));
+            _hrfile = new HeartRateFile(FormatFilename(_settings.HeartRateFile));
         }
 
         private string FormatFilename(string inputFilename)
@@ -420,6 +427,10 @@ namespace HeartRate
             UpdateEnumSubmenu(_settings.UITextAlignment, textAlignmentToolStripMenuItem);
             UpdateEnumSubmenu(_settings.UIBackgroundLayout, backgroundImagePositionToolStripMenuItem);
             doNotScaleFontToolStripMenuItem.Checked = _settings.UIFontUseSize;
+            unsetCSVOutputFileToolStripMenuItem.Visible = !string.IsNullOrWhiteSpace(_settings.LogFile);
+            unsetIBIFileToolStripMenuItem.Visible = !string.IsNullOrWhiteSpace(_settings.IBIFile);
+            unsetHeartRateFileToolStripMenuItem.Visible = !string.IsNullOrWhiteSpace(_settings.HeartRateFile);
+            removeBackgroundImageToolStripMenuItem.Visible = !string.IsNullOrWhiteSpace(_settings.UIBackgroundFile);
         }
 
         private static void UpdateEnumSubmenu<TEnum>(TEnum value, ToolStripMenuItem parent)
@@ -556,6 +567,7 @@ namespace HeartRate
                 _settings.Save();
             }
 
+            UpdateSubmenus();
             UpdateUI();
         }
 
@@ -567,6 +579,7 @@ namespace HeartRate
                 _settings.Save();
             }
 
+            UpdateSubmenus();
             UpdateUI();
         }
 
@@ -666,5 +679,63 @@ namespace HeartRate
         //    }
         //}
         #endregion
+
+        private void SaveFileSetting(ref string target, string filetypes)
+        {
+            if (!Prompt.TrySaveFile(target, filetypes, out var file)) return;
+
+            lock (_settings)
+            {
+                target = file;
+                _settings.Save();
+                LoadSettingsFilesLocked();
+            }
+
+            UpdateSubmenus();
+            UpdateUI();
+        }
+
+        private void UnsetFileSetting(ref string target)
+        {
+            lock (_settings)
+            {
+                target = " ";
+                _settings.Save();
+                LoadSettingsFilesLocked();
+            }
+
+            UpdateSubmenus();
+            UpdateUI();
+        }
+
+        private void setCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileSetting(ref _settings.LogFile, "CSV Files|*.csv|All files (*.*)|*.*");
+        }
+
+        private void unsetCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UnsetFileSetting(ref _settings.LogFile);
+        }
+
+        private void setHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileSetting(ref _settings.HeartRateFile, "Text Files|*.txt|All files (*.*)|*.*");
+        }
+
+        private void unsetHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UnsetFileSetting(ref _settings.HeartRateFile);
+        }
+
+        private void setIBIFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileSetting(ref _settings.IBIFile, "Text Files|*.txt|All files (*.*)|*.*");
+        }
+
+        private void unsetIBIFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UnsetFileSetting(ref _settings.IBIFile);
+        }
     }
 }
