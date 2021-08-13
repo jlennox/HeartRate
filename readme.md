@@ -29,6 +29,10 @@ by request.**
 
 Change log
 ----------
+**1.7.2** August 13th, 2021
+* Added support for a heart rate file. A file that contains only the most present heart rate. (#25)
+* Added file menus for adjusting csv, IBI, and heart rate file output.
+
 **1.7.1** December 29th, 2020
 * Fixed font size in dialog not being what was entered. (#19)
 
@@ -94,6 +98,7 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `LogDateFormat` | text | OA | The format to write the date column as. See `Datetime formatting.` |
 | `LogFile` | text | *empty* | The full path of where to write the logged data to. If empty, no file log is kept. A `%date%` token can be included to substitute in the date. A custom formatter can be included, such as `%date:MM-dd-yyyy%` Example: `C:\users\joe\desktop\heartrate-%date%.csv`  |
 | `IBIFile` | text | *empty* | The full path of where to write the IBI data to. Writes log of RR-Intervals in milliseconds in IBI supported file format. Supports date syntax like `LogFile` does. |
+| `HeartRateFile` | text | *empty* | The full path of where to write the last heart rate to. Anything previously in the file is overwritten. Only the the most present heart rate will exist in the file. Supports date syntax like `LogFile` does. |
 | `AlertLevel` | number | 65 | The heart rate to display a system tray notification balloon at. 0 to disable. |
 | `WarnLevel` | number | 70 | The heart rate to use `WarnColor` at. 0 to disable. |
 | `AlertTimeout` | number | 120000 | The amount of milliseconds to cooldown for being able to show an alert after one was shown. |
