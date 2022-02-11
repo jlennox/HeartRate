@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using static HeartRate.User32;
 
@@ -16,8 +17,8 @@ namespace HeartRate
         private const bool _leaktest = false;
 
         private readonly IHeartRateService _service;
-        private readonly object _disposeSync = new object();
-        private readonly object _updateSync = new object();
+        private readonly object _disposeSync = new();
+        private readonly object _updateSync = new();
         private readonly Bitmap _iconBitmap;
         private readonly Graphics _iconGraphics;
         private readonly HeartRateSettings _settings;
@@ -28,8 +29,8 @@ namespace HeartRate
             LineAlignment = StringAlignment.Center
         };
         private readonly Font _measurementFont;
-        private readonly Stopwatch _alertTimeout = new Stopwatch();
-        private readonly Stopwatch _disconnectedTimeout = new Stopwatch();
+        private readonly Stopwatch _alertTimeout = new();
+        private readonly Stopwatch _disconnectedTimeout = new();
         private readonly DateTime _startedAt;
         private readonly HeartRateServiceWatchdog _watchdog;
         private LogFile _log;
@@ -38,12 +39,12 @@ namespace HeartRate
         private HeartRateSettings _lastSettings;
 
         private string _iconText;
-        private readonly Queue<Font> _lastFonts = new Queue<Font>();
+        private readonly Queue<Font> _lastFonts = new();
         private IntPtr _oldIconHandle;
 
         public HeartRateForm() : this(
             Environment.CommandLine.Contains("--test")
-                ? (IHeartRateService)new TestHeartRateService()
+                ? new TestHeartRateService()
                 : new HeartRateService(),
             HeartRateSettings.GetFilename(),
             DateTime.Now)
@@ -57,6 +58,9 @@ namespace HeartRate
         {
             try
             {
+                DebugLog.Initialize(HeartRateSettings.GetSettingsFile("logs.txt"));
+                AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+                DebugLog.WriteLog("Starting up");
                 // Order of operations -- _startedAt has to be set before
                 // `LoadSettingsLocked` is called.
                 _startedAt = now;
@@ -67,11 +71,8 @@ namespace HeartRate
                 _service = service;
                 _iconBitmap = new Bitmap(_iconWidth, _iconHeight);
                 _iconGraphics = Graphics.FromImage(_iconBitmap);
-                _measurementFont = new Font(
-                    _settings.FontName, _iconWidth,
-                    GraphicsUnit.Pixel);
-                _watchdog = new HeartRateServiceWatchdog(
-                    TimeSpan.FromSeconds(10), _service);
+                _measurementFont = new Font(_settings.FontName, _iconWidth, GraphicsUnit.Pixel);
+                _watchdog = new HeartRateServiceWatchdog(TimeSpan.FromSeconds(10), _service);
 
                 InitializeComponent();
 
@@ -79,10 +80,12 @@ namespace HeartRate
                     ? FormBorderStyle.Sizable
                     : FormBorderStyle.SizableToolWindow;
 
-                CreateEnumSubmenu<ContentAlignment>(textAlignmentToolStripMenuItem,
+                CreateEnumSubmenu<ContentAlignment>(
+                    textAlignmentToolStripMenuItem,
                     textAlignmentToolStripMenuItemItem_Click);
 
-                CreateEnumSubmenu<ImageLayout>(backgroundImagePositionToolStripMenuItem,
+                CreateEnumSubmenu<ImageLayout>(
+                    backgroundImagePositionToolStripMenuItem,
                     backgroundImagePositionToolStripMenuItemItem_Click);
             }
             catch
@@ -92,6 +95,15 @@ namespace HeartRate
             }
         }
 
+        private void UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exceptionFile = HeartRateSettings.GetSettingsFile("crash.txt");
+            if (exceptionFile == null) return;
+            File.WriteAllText(exceptionFile, e.ExceptionObject.ToString());
+
+            DebugLog.WriteLog(e.ExceptionObject.ToString());
+        }
+
         private void HeartRateForm_Load(object sender, EventArgs e)
         {
             UpdateLabelFont();
@@ -99,23 +111,9 @@ namespace HeartRate
 
             Size = _settings.UIWindowSize;
 
-            try
-            {
-                // InitiateDefault is blocking. A better UI would show some type
-                // of status during this time, but it's not super important.
-                _service.InitiateDefault();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Unable to initialize bluetooth service. Exiting.\n{ex.Message}",
-                    "Fatal exception",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                Environment.Exit(-1);
-            }
-
             _service.HeartRateUpdated += Service_HeartRateUpdated;
+
+            Task.Factory.StartNew(_service.InitiateDefault);
 
             UpdateUI();
         }
@@ -141,7 +139,7 @@ namespace HeartRate
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Exception in Service_HeartRateUpdated {ex}");
+                DebugLog.WriteLog($"Exception in Service_HeartRateUpdated {ex}");
 
                 Debugger.Break();
             }
@@ -169,9 +167,15 @@ namespace HeartRate
 
             lock (_updateSync)
             {
-                if (isDisconnected)
+                if (reading.IsError)
                 {
-                    uxBpmNotifyIcon.Text = $"Disconnected {status} ({bpm})";
+                    uxBpmNotifyIcon.Text = reading.Error.Truncate(60);
+                    iconText = reading.Error;
+                }
+                else if (isDisconnected)
+                {
+                    var description = $"Disconnected {status} ({bpm})";
+                    uxBpmNotifyIcon.Text = description;
 
                     if (!_disconnectedTimeout.IsRunning)
                     {
@@ -184,7 +188,7 @@ namespace HeartRate
                         // Originally this used " ⃠" (U+20E0, "Prohibition Symbol")
                         // but MeasureString was only returning ~half of the
                         // width.
-                        iconText = "X";
+                        iconText = description;
                     }
                 }
                 else
@@ -465,6 +469,34 @@ namespace HeartRate
             return (TEnum)Enum.Parse(typeof(TEnum), menuItem.Tag.ToString());
         }
 
+        private void UpdateSaveFileSetting(ref string target, string filetypes)
+        {
+            if (!Prompt.TrySaveFile(target, filetypes, out var file)) return;
+
+            lock (_settings)
+            {
+                target = file;
+                _settings.Save();
+                LoadSettingsFilesLocked();
+            }
+
+            UpdateSubmenus();
+            UpdateUI();
+        }
+
+        private void UnsetFileSetting(ref string target)
+        {
+            lock (_settings)
+            {
+                target = " ";
+                _settings.Save();
+                LoadSettingsFilesLocked();
+            }
+
+            UpdateSubmenus();
+            UpdateUI();
+        }
+
         #region UI events
         private void uxBpmNotifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
@@ -528,6 +560,12 @@ namespace HeartRate
         private void editIconFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.WarnColor);
         private void editWindowFontColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.UIColor);
         private void editWindowFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.UIWarnColor);
+        private void setCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.LogFile, "CSV Files|*.csv|All files (*.*)|*.*");
+        private void unsetCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e) => UnsetFileSetting(ref _settings.LogFile);
+        private void setHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.HeartRateFile, "Text Files|*.txt|All files (*.*)|*.*");
+        private void unsetHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e) => UnsetFileSetting(ref _settings.HeartRateFile);
+        private void setIBIFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.IBIFile, "Text Files|*.txt|All files (*.*)|*.*");
+        private void unsetIBIFileToolStripMenuItem_Click(object sender, EventArgs e) => UnsetFileSetting(ref _settings.IBIFile);
 
         private void selectIconFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -679,63 +717,5 @@ namespace HeartRate
         //    }
         //}
         #endregion
-
-        private void SaveFileSetting(ref string target, string filetypes)
-        {
-            if (!Prompt.TrySaveFile(target, filetypes, out var file)) return;
-
-            lock (_settings)
-            {
-                target = file;
-                _settings.Save();
-                LoadSettingsFilesLocked();
-            }
-
-            UpdateSubmenus();
-            UpdateUI();
-        }
-
-        private void UnsetFileSetting(ref string target)
-        {
-            lock (_settings)
-            {
-                target = " ";
-                _settings.Save();
-                LoadSettingsFilesLocked();
-            }
-
-            UpdateSubmenus();
-            UpdateUI();
-        }
-
-        private void setCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SaveFileSetting(ref _settings.LogFile, "CSV Files|*.csv|All files (*.*)|*.*");
-        }
-
-        private void unsetCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UnsetFileSetting(ref _settings.LogFile);
-        }
-
-        private void setHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SaveFileSetting(ref _settings.HeartRateFile, "Text Files|*.txt|All files (*.*)|*.*");
-        }
-
-        private void unsetHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UnsetFileSetting(ref _settings.HeartRateFile);
-        }
-
-        private void setIBIFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SaveFileSetting(ref _settings.IBIFile, "Text Files|*.txt|All files (*.*)|*.*");
-        }
-
-        private void unsetIBIFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UnsetFileSetting(ref _settings.IBIFile);
-        }
     }
 }
