@@ -2,15 +2,15 @@
 using HeartRate;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Lennox.HeartRate.Tests
+namespace Lennox.HeartRate.Tests;
+
+[TestClass]
+public class SettingsTests
 {
-    [TestClass]
-    public class SettingsTests
+    [TestMethod]
+    public void SettingsSaveToFileAsExpected()
     {
-        [TestMethod]
-        public void SettingsSaveToFileAsExpected()
-        {
-            const string expected = @"<?xml version=""1.0""?>
+        const string expected = @"<?xml version=""1.0""?>
 <HeartRateSettingsProtocol xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
   <Version>1</Version>
   <FontName>Arial</FontName>
@@ -38,23 +38,22 @@ namespace Lennox.HeartRate.Tests
   <IBIFile> </IBIFile>
 </HeartRateSettingsProtocol>";
 
-            using (var tempFile = new TempFile())
-            {
-                var def = HeartRateSettings.CreateDefault(tempFile);
-                def.Save();
-
-                var actual = File.ReadAllText(tempFile);
-                AssertStringEqualsNormalizeEndings(expected, actual);
-            }
-        }
-
-        private static void AssertStringEqualsNormalizeEndings(
-            string expected, string actual)
+        using (var tempFile = new TempFile())
         {
-            expected = (expected ?? "").Replace("\r", "").Trim();
-            actual = (actual ?? "").Replace("\r", "").Trim();
+            var def = HeartRateSettings.CreateDefault(tempFile);
+            def.Save();
 
-            Assert.AreEqual(expected, actual);
+            var actual = File.ReadAllText(tempFile);
+            AssertStringEqualsNormalizeEndings(expected, actual);
         }
+    }
+
+    private static void AssertStringEqualsNormalizeEndings(
+        string expected, string actual)
+    {
+        expected = (expected ?? "").Replace("\r", "").Trim();
+        actual = (actual ?? "").Replace("\r", "").Trim();
+
+        Assert.AreEqual(expected, actual);
     }
 }

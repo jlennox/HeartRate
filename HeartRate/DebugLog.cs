@@ -3,50 +3,49 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace HeartRate
+namespace HeartRate;
+
+internal class DebugLog
 {
-    internal class DebugLog
+    private readonly string _name;
+
+    public DebugLog(string name)
     {
-        private readonly string _name;
+        _name = name;
+    }
 
-        public DebugLog(string name)
+    public void Write(string s)
+    {
+        WriteLog($"{_name}: {s}");
+    }
+
+    private static FileStream _fs = null;
+
+    public static void Initialize(string filename)
+    {
+        _fs = File.Open(filename, FileMode.Create, FileAccess.Write, FileShare.Read);
+    }
+
+    internal static string FormatLine(string s)
+    {
+        return $"{DateTime.Now}: {s}\n";
+    }
+
+    public static void WriteLog(string s)
+    {
+        Debug.WriteLine(s);
+
+        if (_fs != null)
         {
-            _name = name;
-        }
+            var bytes = Encoding.UTF8.GetBytes(FormatLine(s));
 
-        public void Write(string s)
-        {
-            WriteLog($"{_name}: {s}");
-        }
-
-        private static FileStream _fs = null;
-
-        public static void Initialize(string filename)
-        {
-            _fs = File.Open(filename, FileMode.Create, FileAccess.Write, FileShare.Read);
-        }
-
-        internal static string FormatLine(string s)
-        {
-            return $"{DateTime.Now}: {s}\n";
-        }
-
-        public static void WriteLog(string s)
-        {
-            Debug.WriteLine(s);
-
-            if (_fs != null)
+            if (_fs.Length > 1024 * 1024)
             {
-                var bytes = Encoding.UTF8.GetBytes(FormatLine(s));
-
-                if (_fs.Length > 1024 * 1024)
-                {
-                    _fs.SetLength(0);
-                }
-
-                _fs.Write(bytes, 0, bytes.Length);
-                _fs.Flush();
+                _fs.SetLength(0);
             }
+
+            _fs.Write(bytes, 0, bytes.Length);
+            _fs.Flush();
         }
     }
 }
