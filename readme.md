@@ -31,6 +31,7 @@ Change log
 ----------
 **1.7.3** February 10th, 2022
 * Drastic dependability improvements. Will retry more aggressively if the bluetooth device disconnects. (#25)
+* Fixed quoting issues and incorrect column values in CSV output. (#27)
 
 **1.7.2** August 13th, 2021
 * Added support for a heart rate file. A file that contains only the most present heart rate. (#25)
