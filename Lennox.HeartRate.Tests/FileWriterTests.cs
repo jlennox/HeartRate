@@ -4,48 +4,47 @@ using System.Linq;
 using HeartRate;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Lennox.HeartRate.Tests
+namespace Lennox.HeartRate.Tests;
+
+[TestClass]
+public class FileWriterTests
 {
-    [TestClass]
-    public class FileWriterTests
+    private static int MillisecondToRRValue(double val)
     {
-        private static int MillisecondToRRValue(double val)
+        return (int)(val / 1000d * 1024);
+    }
+
+    [TestMethod]
+    public void IBIFormatsCorrectly()
+    {
+        using var tmp = new TempFile();
+        var ibi = new IBIFile(tmp);
+
+        ibi.Reading(new HeartRateReading
         {
-            return (int)(val / 1000d * 1024);
-        }
+            RRIntervals = new int[] {
+                MillisecondToRRValue(4),
+                MillisecondToRRValue(5),
+                MillisecondToRRValue(6)
+            }
+        });
 
-        [TestMethod]
-        public void IBIFormatsCorrectly()
+        // No-operations.
+        ibi.Reading(new HeartRateReading { RRIntervals = null });
+        ibi.Reading(new HeartRateReading { RRIntervals = Array.Empty<int>() });
+
+        ibi.Reading(new HeartRateReading
         {
-            using var tmp = new TempFile();
-            var ibi = new IBIFile(tmp);
+            RRIntervals = new int[] {
+                MillisecondToRRValue(7),
+                MillisecondToRRValue(8),
+                MillisecondToRRValue(9)
+            }
+        });
 
-            ibi.Reading(new HeartRateReading
-            {
-                RRIntervals = new int[] {
-                    MillisecondToRRValue(4),
-                    MillisecondToRRValue(5),
-                    MillisecondToRRValue(6)
-                }
-            });
-
-            // No-operations.
-            ibi.Reading(new HeartRateReading { RRIntervals = null });
-            ibi.Reading(new HeartRateReading { RRIntervals = Array.Empty<int>() });
-
-            ibi.Reading(new HeartRateReading
-            {
-                RRIntervals = new int[] {
-                    MillisecondToRRValue(7),
-                    MillisecondToRRValue(8),
-                    MillisecondToRRValue(9)
-                }
-            });
-
-            var actual = File.ReadAllLines(tmp);
-            var expected = Enumerable.Range(4, 6)
-                .Select(t => t.ToString()).ToArray();
-            CollectionAssert.AreEqual(expected, actual);
-        }
+        var actual = File.ReadAllLines(tmp);
+        var expected = Enumerable.Range(4, 6)
+            .Select(t => t.ToString()).ToArray();
+        CollectionAssert.AreEqual(expected, actual);
     }
 }
