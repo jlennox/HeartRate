@@ -48,5 +48,12 @@ namespace HeartRate
                 return false;
             }
         }
+
+        public static string Truncate(this string s, int length)
+        {
+            if (s == null || s.Length < length) return s;
+
+            return s.Substring(0, length);
+        }
     }
 }

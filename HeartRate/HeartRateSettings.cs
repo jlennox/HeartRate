@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -16,7 +15,7 @@ namespace HeartRate
         // See note in Load for how to version the file.
         private const int _settingsVersion = 1;
 
-        public Size UIWindowSize => new Size(UIWindowSizeX, UIWindowSizeY);
+        public Size UIWindowSize => new(UIWindowSizeX, UIWindowSizeY);
 
         public int Version;
         public string FontName;
@@ -180,17 +179,29 @@ namespace HeartRate
 
         public static string GetFilename() => _generatedFilename.Value;
 
-        private static string GetFilenameCore()
+        private static string GetSettingsDir()
         {
             var dataPath = Environment.ExpandEnvironmentVariables("%appdata%");
 
-            if (string.IsNullOrEmpty(dataPath))
-            {
-                // This is bad. Irl error handling is needed.
-                return null;
-            }
+            if (string.IsNullOrEmpty(dataPath)) return null;
 
-            var appDir = Path.Combine(dataPath, "HeartRate");
+            return Path.Combine(dataPath, "HeartRate");
+        }
+
+        public static string GetSettingsFile(string filename)
+        {
+            var appDir = GetSettingsDir();
+            if (appDir == null) return null;
+
+            return Path.Combine(appDir, filename);
+        }
+
+        private static string GetFilenameCore()
+        {
+            var appDir = GetSettingsDir();
+
+            // This is bad. Irl error handling is needed.
+            if (appDir == null) return null;
 
             // Arg, do this better.
             try
@@ -287,12 +298,11 @@ namespace HeartRate
 
         internal static HeartRateSettingsProtocol Load(string filename)
         {
-            Debug.WriteLine($"Loading from {filename}");
+            DebugLog.WriteLog($"Loading from {filename}");
 
             if (filename == null)
             {
-                throw new FileNotFoundException(
-                    $"Unable to read file {filename}");
+                throw new FileNotFoundException($"Unable to read null file.");
             }
 
             if (!File.Exists(filename) || new FileInfo(filename).Length < 5)
@@ -308,7 +318,7 @@ namespace HeartRate
 
         internal static void Save(HeartRateSettings settings, string filename)
         {
-            Debug.WriteLine($"Saving to {filename}");
+            DebugLog.WriteLog($"Saving to {filename}");
 
             var protocol = new HeartRateSettingsProtocol(settings);
 

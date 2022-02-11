@@ -9,7 +9,7 @@ namespace HeartRate
         private readonly TimeSpan _timeout;
         private readonly IHeartRateService _service;
         private readonly Stopwatch _lastUpdateTimer = Stopwatch.StartNew();
-        private readonly object _sync = new object();
+        private readonly object _sync = new();
         private bool _isDisposed = false;
 
         public HeartRateServiceWatchdog(
@@ -52,20 +52,27 @@ namespace HeartRate
                     if (_lastUpdateTimer.Elapsed > _timeout)
                     {
                         needsRefresh = true;
-                        _lastUpdateTimer.Restart();
                     }
                 }
 
                 if (needsRefresh)
                 {
-                    Debug.WriteLine("Restarting services...");
-                    _service.InitiateDefault();
+                    DebugLog.WriteLog("Restarting services...");
+                    try
+                    {
+                        _service.InitiateDefault();
+                        _lastUpdateTimer.Restart();
+                    }
+                    catch (Exception e)
+                    {
+                        DebugLog.WriteLog($"Failed restart: {e}");
+                    }
                 }
 
                 Thread.Sleep(10000);
             }
 
-            Debug.WriteLine("Watchdog thread exiting.");
+            DebugLog.WriteLog("Watchdog thread exiting.");
         }
 
         public void Dispose()

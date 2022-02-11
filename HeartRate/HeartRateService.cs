@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -33,6 +32,8 @@ namespace HeartRate
         public int BeatsPerMinute { get; set; }
         public int? EnergyExpended { get; set; }
         public int[] RRIntervals { get; set; }
+        public bool IsError { get; set; }
+        public string Error { get; set; }
     }
 
     internal interface IHeartRateService : IDisposable
@@ -55,12 +56,37 @@ namespace HeartRate
 
         private GattDeviceService _service;
         private byte[] _buffer;
-        private readonly object _disposeSync = new object();
+        private readonly object _disposeSync = new();
+        private readonly DebugLog _log = new(nameof(HeartRateService));
 
         public event HeartRateUpdateEventHandler HeartRateUpdated;
         public delegate void HeartRateUpdateEventHandler(HeartRateReading reading);
 
         public void InitiateDefault()
+        {
+            while (true)
+            {
+                try
+                {
+                    InitiateDefaultCore();
+                    return; // success.
+                }
+                catch (Exception e)
+                {
+                    _log.Write($"InitiateDefault exception: {e}");
+
+                    HeartRateUpdated?.Invoke(new HeartRateReading
+                    {
+                        IsError = true,
+                        Error = e.Message
+                    });
+                }
+
+                Thread.Sleep(TimeSpan.FromSeconds(2.5));
+            }
+        }
+
+        private void InitiateDefaultCore()
         {
             var heartrateSelector = GattDeviceService
                 .GetDeviceSelectorFromUuid(GattServiceUuids.HeartRate);
@@ -73,10 +99,13 @@ namespace HeartRate
 
             if (device == null)
             {
+                _log.Write("Unable to locate a device.");
                 throw new ArgumentNullException(
                     nameof(device),
-                    "Unable to locate heart rate device.");
+                    "Unable to locate heart rate device. Ensure it's connected and paired.");
             }
+
+            _log.Write($"Found device: [Name: {device.Name}, Id: Name: {device.Id}]");
 
             GattDeviceService service;
 
@@ -97,6 +126,7 @@ namespace HeartRate
 
             if (service == null)
             {
+                _log.Write("service null");
                 throw new ArgumentOutOfRangeException(
                     $"Unable to get service to {device.Name} ({device.Id}). Is the device inuse by another program? The Bluetooth adaptor may need to be turned off and on again.");
             }
@@ -111,6 +141,8 @@ namespace HeartRate
                     $"Unable to locate heart rate measurement on device {device.Name} ({device.Id}).");
             }
 
+            _log.Write($"Service [CharacteristicProperties: {heartrate.CharacteristicProperties}, UserDescription: {heartrate.UserDescription}]");
+
             var status = heartrate
                 .WriteClientCharacteristicConfigurationDescriptorAsync(
                     GattClientCharacteristicConfigurationDescriptorValue.Notify)
@@ -118,7 +150,13 @@ namespace HeartRate
 
             heartrate.ValueChanged += HeartRate_ValueChanged;
 
-            Debug.WriteLine($"Started {status}");
+            DebugLog.WriteLog($"Started {status}");
+
+            if (status != GattCommunicationStatus.Success)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(status), status, "Attempt to configure service failed.");
+            }
         }
 
         public void HeartRate_ValueChanged(
@@ -145,12 +183,12 @@ namespace HeartRate
 
                 if (readingValue == null)
                 {
-                    Debug.WriteLine($"Buffer was too small. Got {buffer.Length}.");
+                    DebugLog.WriteLog($"Buffer was too small. Got {buffer.Length}.");
                     return;
                 }
 
                 var reading = readingValue.Value;
-                Debug.WriteLine($"Read {reading.Flags:X} {reading.Status} {reading.BeatsPerMinute}");
+                DebugLog.WriteLog($"Read {reading.Flags:X} {reading.Status} {reading.BeatsPerMinute}");
 
                 HeartRateUpdated?.Invoke(reading);
             }
