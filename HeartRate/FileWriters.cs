@@ -12,12 +12,14 @@ namespace HeartRate
 
         private readonly string _filename;
 
+        public abstract void Reading(HeartRateReading reading);
+
         protected FileWriter(string filename)
         {
             _filename = filename;
         }
 
-        protected void WriteLine(string s)
+        protected void AppendLine(string s)
         {
             if (_filename == null) return;
 
@@ -49,13 +51,14 @@ namespace HeartRate
         {
         }
 
-        public void Reading(HeartRateReading reading)
+        public override void Reading(HeartRateReading reading)
         {
             if (!HasFileWriter) return;
             if (reading.RRIntervals == null) return;
             if (reading.RRIntervals.Length == 0) return;
+            if (reading.IsError) return;
 
-            WriteLine(string.Join("\r\n", AsMS(reading.RRIntervals)));
+            AppendLine(string.Join("\r\n", AsMS(reading.RRIntervals)));
         }
 
         // rr intervals come from the device in units of 1/1024th of a second,
@@ -71,6 +74,7 @@ namespace HeartRate
     internal sealed class LogFile : FileWriter
     {
         private readonly HeartRateSettings _settings;
+        [ThreadStatic] private readonly StringBuilder _stringBuilder = new StringBuilder();
 
         public LogFile(HeartRateSettings settings, string filename)
             : base(filename)
@@ -78,14 +82,13 @@ namespace HeartRate
             _settings = settings;
         }
 
-        public void Reading(HeartRateReading reading)
+        public override void Reading(HeartRateReading reading)
         {
             if (!HasFileWriter) return;
-
-            string data = null;
+            if (reading.IsError) return;
 
             var bpm = reading.BeatsPerMinute;
-            var status = reading.BeatsPerMinute;
+            var status = reading.Status;
             var rrvalue = reading.RRIntervals == null
                 ? ""
                 : string.Join(",", reading.RRIntervals);
@@ -98,24 +101,51 @@ namespace HeartRate
             switch ((_settings.LogFormat ?? "").ToLower())
             {
                 case "csv":
-                    data = $"{dateString},{bpm},{status},{reading.EnergyExpended},{rrvalue}";
+                    AppendCsvValue(_stringBuilder, dateString, false, true);
+                    AppendCsvValue(_stringBuilder, bpm, false, true);
+                    AppendCsvValue(_stringBuilder, status, false, true);
+                    AppendCsvValue(_stringBuilder, reading.EnergyExpended, false, true);
+                    AppendCsvValue(_stringBuilder, rrvalue, true, false);
                     break;
             }
 
-            if (data != null)
+            if (_stringBuilder.Length > 0)
             {
-                WriteLine(data);
+                AppendLine(_stringBuilder.ToString());
+                _stringBuilder.Clear();
             }
+        }
+
+        private static void AppendCsvValue<T>(StringBuilder sb, T value, bool alwaysQuote, bool appendComma)
+        {
+            var stringed = value.ToString();
+            var needsQuotes = alwaysQuote || stringed.Any(t => t is ',' or '\n');
+            if (!needsQuotes)
+            {
+                sb.Append(stringed);
+                if (appendComma) sb.Append(',');
+                return;
+            }
+
+            sb.Append('"');
+            foreach (var c in stringed)
+            {
+                if (c == '"') sb.Append('\\');
+                sb.Append(c);
+            }
+            sb.Append('"');
+            if (appendComma) sb.Append(',');
         }
     }
 
-    internal class HeartRateFile : FileWriter
+    internal sealed class HeartRateFile : FileWriter
     {
         public HeartRateFile(string filename) : base(filename) { }
 
-        public void Reading(HeartRateReading reading)
+        public override void Reading(HeartRateReading reading)
         {
             if (!HasFileWriter) return;
+            if (reading.IsError) return;
             Write(reading.BeatsPerMinute.ToString());
         }
     }

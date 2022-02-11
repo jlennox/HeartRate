@@ -9,7 +9,7 @@ namespace HeartRate
     internal static class DateTimeFormatter
     {
         public const string DefaultFilename = "yyyy-MM-dd hh-mm tt";
-        public const string DefaultColumn = "OA";
+        public const string DefaultColumn = "";
 
         private static readonly Regex _tokenExp = new Regex(
             @"%date(?::([^%]+))?%",
@@ -51,12 +51,11 @@ namespace HeartRate
                 ? defaultFormat
                 : formatter;
 
-            switch ((formatter ?? "").ToUpperInvariant())
-            {
-                case "OA": return datetime.ToOADate().ToString();
-            }
-
-            return datetime.ToString(formatter);
+            return (formatter ?? "").ToUpperInvariant() switch {
+                "OA" => datetime.ToOADate().ToString(),
+                "" => datetime.ToString(),
+                _ => datetime.ToString(formatter)
+            };
         }
     }
 }
