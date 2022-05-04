@@ -14,7 +14,7 @@ Requires Windows 8.1 or newer.
 
 The executable and code are released under MIT license.
 
-Code can be built using [Visual Studio Community 2019](https://visualstudio.microsoft.com/vs/).
+Code can be built using [Visual Studio Community 2022](https://visualstudio.microsoft.com/vs/).
 
 Motivation
 ----------
@@ -29,6 +29,9 @@ by request.**
 
 Change log
 ----------
+**1.7.4** May 3rd, 2022
+* Include UDP output for IPC. (#35)
+
 **1.7.3** February 10th, 2022
 * Drastic dependability improvements. Will retry more aggressively if the bluetooth device disconnects. (#25)
 * Fixed quoting issues and incorrect column values in CSV output. (#27)
@@ -107,6 +110,7 @@ The file is `%appdata%\HeartRate\settings.xml`
 | `WarnLevel` | number | 70 | The heart rate to use `WarnColor` at. 0 to disable. |
 | `AlertTimeout` | number | 120000 | The amount of milliseconds to cooldown for being able to show an alert after one was shown. |
 | `DisconnectedTimeout` | number | 10000 | The amount of milliseconds after disconnecting to await for a valid device connection before displaying "X" |
+| `UDP` | host:port | *empty* | A UDP end point to write the "LogFile" output to. Format is `ip:port`, ie: `<UDP>127.0.0.1:2115</UDP>` |
 
 *Settings also exposed by the UI*
 

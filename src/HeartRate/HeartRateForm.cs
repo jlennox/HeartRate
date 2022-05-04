@@ -35,6 +35,7 @@ public partial class HeartRateForm : Form
     private readonly HeartRateServiceWatchdog _watchdog;
     private LogFile _log;
     private IBIFile _ibi;
+    private UdpWriter _udp;
     private HeartRateFile _hrfile;
     private HeartRateSettings _lastSettings;
 
@@ -149,6 +150,7 @@ public partial class HeartRateForm : Form
     {
         _log?.Reading(reading);
         _ibi?.Reading(reading);
+        _udp?.Reading(reading);
         _hrfile?.Reading(reading);
 
         var bpm = reading.BeatsPerMinute;
@@ -400,8 +402,11 @@ public partial class HeartRateForm : Form
 
     private void LoadSettingsFilesLocked()
     {
+        _udp?.TryDispose();
+
         _log = new LogFile(_settings, FormatFilename(_settings.LogFile));
         _ibi = new IBIFile(FormatFilename(_settings.IBIFile));
+        _udp = new UdpWriter(_settings);
         _hrfile = new HeartRateFile(FormatFilename(_settings.HeartRateFile));
     }
 

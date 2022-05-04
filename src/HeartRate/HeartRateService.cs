@@ -105,7 +105,9 @@ internal class HeartRateService : IHeartRateService
                 "Unable to locate heart rate device. Ensure it's connected and paired.");
         }
 
-        _log.Write($"Found device: [Name: {device.Name}, Id: Name: {device.Id}]");
+        var properties = string.Join(",", device.Properties.Select(t => $"{t.Key}: {t.Value}"));
+
+        _log.Write($"Found device: [Name: {device.Name}, Id: {device.Id}, IsEnabled: {device.IsEnabled}, properties: {properties}]");
 
         GattDeviceService service;
 
@@ -155,7 +157,8 @@ internal class HeartRateService : IHeartRateService
         if (status != GattCommunicationStatus.Success)
         {
             throw new ArgumentOutOfRangeException(
-                nameof(status), status, "Attempt to configure service failed.");
+                nameof(status), status,
+                "Attempt to configure service failed.");
         }
     }
 

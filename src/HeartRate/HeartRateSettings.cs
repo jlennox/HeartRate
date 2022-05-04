@@ -43,6 +43,7 @@ public class HeartRateSettings
     public string LogFile;
     public string IBIFile;
     public string HeartRateFile;
+    public ConnectionInfo UDP;
 
     public HeartRateSettings(string filename)
     {
@@ -77,7 +78,8 @@ public class HeartRateSettings
             LogDateFormat = DateTimeFormatter.DefaultColumn,
             LogFile = " ", // Initialize to " " instead of null so the entry is still written.
             IBIFile = " ",
-            HeartRateFile = " "
+            HeartRateFile = " ",
+            UDP = default
         };
     }
 
@@ -120,6 +122,7 @@ public class HeartRateSettings
         LogFile = protocol.LogFile;
         IBIFile = protocol.IBIFile;
         HeartRateFile = protocol.HeartRateFile;
+        UDP = ConnectionInfo.Parse(protocol.UDP);
 
         // A hack fix from a bug that's been fixed.
         if (UITextAlignment == 0) UITextAlignment = ContentAlignment.MiddleCenter;
@@ -169,6 +172,7 @@ public class HeartRateSettings
             LogFile = LogFile,
             IBIFile = IBIFile,
             HeartRateFile = HeartRateFile,
+            UDP = UDP,
         };
     }
 
@@ -179,10 +183,9 @@ public class HeartRateSettings
 
     public static string GetFilename() => _generatedFilename.Value;
 
-    private static string GetSettingsDir()
+    private static string GetSettingsDirectory()
     {
         var dataPath = Environment.ExpandEnvironmentVariables("%appdata%");
-
         if (string.IsNullOrEmpty(dataPath)) return null;
 
         return Path.Combine(dataPath, "HeartRate");
@@ -190,7 +193,7 @@ public class HeartRateSettings
 
     public static string GetSettingsFile(string filename)
     {
-        var appDir = GetSettingsDir();
+        var appDir = GetSettingsDirectory();
         if (appDir == null) return null;
 
         return Path.Combine(appDir, filename);
@@ -198,7 +201,7 @@ public class HeartRateSettings
 
     private static string GetFilenameCore()
     {
-        var appDir = GetSettingsDir();
+        var appDir = GetSettingsDirectory();
 
         // This is bad. Irl error handling is needed.
         if (appDir == null) return null;
@@ -217,6 +220,33 @@ public class HeartRateSettings
     }
 }
 
+public struct ConnectionInfo
+{
+    public string Hostname { get; set; }
+    public int Port { get; set; }
+
+    public bool IsValid => !string.IsNullOrWhiteSpace(Hostname) && Port > 0;
+
+    public static ConnectionInfo Parse(string connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString)) return default;
+
+        var split = connectionString.Split(new[] { ':' }, 2);
+        if (!int.TryParse(split[1], out var port)) return default;
+        return new ConnectionInfo
+        {
+            Hostname = split[0],
+            Port = port,
+        };
+    }
+
+    public override string? ToString()
+    {
+        if (!IsValid) return null;
+        return $"{Hostname}:{Port}";
+    }
+}
+
 // The object which is serialized to/from XML. XmlSerializer has poor
 // type support. HeartRateSettingsProtocol is public to appease
 // XmlSerializer.
@@ -224,8 +254,7 @@ public class HeartRateSettingsProtocol
 {
     // XmlSerializer is used to avoid third party dependencies. It's not
     // pretty.
-    private static readonly XmlSerializer _serializer =
-        new XmlSerializer(typeof(HeartRateSettingsProtocol));
+    private static readonly XmlSerializer _serializer = new(typeof(HeartRateSettingsProtocol));
 
     // Do not remove the setter as it's needed by the serializer.
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -255,6 +284,7 @@ public class HeartRateSettingsProtocol
     public string LogFile { get; set; }
     public string IBIFile { get; set; }
     public string HeartRateFile { get; set; }
+    public string UDP { get; set; }
     // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
 
     // Required by deserializer.
@@ -289,6 +319,7 @@ public class HeartRateSettingsProtocol
         LogFile = settings.LogFile ?? " ";
         IBIFile = settings.IBIFile ?? " ";
         HeartRateFile = settings.HeartRateFile ?? " ";
+        UDP = settings.UDP.ToString() ?? " ";
     }
 
     private static string ColorToString(Color color)

@@ -2,11 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 
 namespace HeartRate;
 
-internal abstract class FileWriter
+internal interface IReadingListener
+{
+    void Reading(HeartRateReading reading);
+}
+
+internal abstract class FileWriter : IReadingListener
 {
     protected bool HasFileWriter => _filename != null;
 
@@ -74,7 +80,7 @@ internal sealed class IBIFile : FileWriter
 internal sealed class LogFile : FileWriter
 {
     private readonly HeartRateSettings _settings;
-    [ThreadStatic] private readonly StringBuilder _stringBuilder = new StringBuilder();
+    [ThreadStatic] private static StringBuilder _stringBuilder;
 
     public LogFile(HeartRateSettings settings, string filename)
         : base(filename)
@@ -85,7 +91,17 @@ internal sealed class LogFile : FileWriter
     public override void Reading(HeartRateReading reading)
     {
         if (!HasFileWriter) return;
-        if (reading.IsError) return;
+        var csv = GetCsv(_settings, reading);
+
+        if (csv == null) return;
+        AppendLine(csv);
+    }
+
+    public static string GetCsv(HeartRateSettings settings, HeartRateReading reading)
+    {
+        if (reading.IsError) return null;
+
+        _stringBuilder ??= new StringBuilder();
 
         var bpm = reading.BeatsPerMinute;
         var status = reading.Status;
@@ -94,11 +110,11 @@ internal sealed class LogFile : FileWriter
             : string.Join(",", reading.RRIntervals);
 
         var dateString = DateTimeFormatter.Format(
-            _settings.LogDateFormat,
+            settings.LogDateFormat,
             DateTime.Now,
             DateTimeFormatter.DefaultColumn);
 
-        switch ((_settings.LogFormat ?? "").ToLower())
+        switch ((settings.LogFormat ?? "").ToLower())
         {
             case "csv":
                 AppendCsvValue(_stringBuilder, dateString, false, true);
@@ -111,9 +127,12 @@ internal sealed class LogFile : FileWriter
 
         if (_stringBuilder.Length > 0)
         {
-            AppendLine(_stringBuilder.ToString());
+            var csv = _stringBuilder.ToString();
             _stringBuilder.Clear();
+            return csv;
         }
+
+        return null;
     }
 
     private static void AppendCsvValue<T>(StringBuilder sb, T value, bool alwaysQuote, bool appendComma)
@@ -147,5 +166,43 @@ internal sealed class HeartRateFile : FileWriter
         if (!HasFileWriter) return;
         if (reading.IsError) return;
         Write(reading.BeatsPerMinute.ToString());
+    }
+}
+
+internal sealed class UdpWriter : IReadingListener, IDisposable
+{
+    private readonly HeartRateSettings _settings;
+    private readonly UdpClient? _client;
+    [ThreadStatic] private static byte[] _buffer;
+
+    public UdpWriter(HeartRateSettings settings)
+    {
+        _settings = settings;
+
+        if (_settings.UDP.IsValid)
+        {
+            _client = new UdpClient(_settings.UDP.Hostname, _settings.UDP.Port);
+        }
+    }
+
+    public void Reading(HeartRateReading reading)
+    {
+        if (_client == null) return;
+
+        var csv = LogFile.GetCsv(_settings, reading);
+        if (csv == null) return;
+
+        // This should always be large enough...
+        _buffer ??= new byte[1024 * 10];
+
+        csv += "\n";
+
+        var byteCount = Encoding.UTF8.GetBytes(csv, 0, csv.Length, _buffer, 0);
+        _client.Send(_buffer, byteCount);
+    }
+
+    public void Dispose()
+    {
+        _client?.TryDispose();
     }
 }
