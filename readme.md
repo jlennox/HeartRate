@@ -9,6 +9,7 @@ This has only been tested on a [Polar H7](https://www.amazon.com/dp/B007S088F4) 
 Reportedly working devices include:
 * Polar H7, Polar OH1, Polar 10
 * Coospo HRM
+* Magene H64
 
 Requires Windows 8.1 or newer.
 
