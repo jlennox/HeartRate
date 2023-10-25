@@ -560,7 +560,12 @@ public partial class HeartRateForm : Form
         thread.Start();
     }
 
-    private void uxExitMenuItem_Click(object sender, EventArgs e) => Environment.Exit(0);
+    private void uxExitMenuItem_Click(object sender, EventArgs e)
+    {
+        uxBpmNotifyIcon.Dispose();
+        Environment.Exit(0);
+    }
+
     private void editFontColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.Color);
     private void editIconFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.WarnColor);
     private void editWindowFontColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.UIColor);
