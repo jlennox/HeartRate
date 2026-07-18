@@ -59,7 +59,7 @@ public class HeartRateSettings
             UIFontName = "Arial",
             UIFontStyle = FontStyle.Regular,
             UIFontSize = 20,
-            UIFontUseSize = true,
+            UIFontUseSize = false,
             UIWindowSizeX = 800,
             UIWindowSizeY = 600,
             UITextAlignment = ContentAlignment.MiddleCenter,

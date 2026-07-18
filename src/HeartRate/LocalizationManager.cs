@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Timers;
 
 namespace HeartRate;
 
@@ -11,9 +10,6 @@ public static class LocalizationManager
 {
     private static readonly Dictionary<string, string> _strings = new(StringComparer.OrdinalIgnoreCase);
     private static string _currentLanguage = "en";
-    private static FileSystemWatcher _watcher;
-    private static System.Timers.Timer _reloadDebounce;
-    private static readonly object _reloadLock = new();
     private static string _languageDirectory;
 
     /// <summary>
@@ -22,14 +18,13 @@ public static class LocalizationManager
     public static string CurrentLanguage => _currentLanguage;
 
     /// <summary>
-    /// Raised after the language is changed via SetLanguage or a hot-reload.
+    /// Raised after the language is changed via SetLanguage.
     /// </summary>
     public static event Action LanguageChanged;
 
     /// <summary>
-    /// Initializes the localization manager: discovers available language files,
-    /// loads the specified or auto-detected language, and starts file monitoring
-    /// for hot-reload.
+    /// Initializes the localization manager: discovers available language files
+    /// and loads the specified or auto-detected language once at startup.
     /// </summary>
     /// <param name="language">
     /// Language code to load. Pass null to auto-detect from the system culture.
@@ -40,8 +35,6 @@ public static class LocalizationManager
 
         var lang = language ?? DetectSystemLanguage(_languageDirectory);
         LoadLanguage(lang);
-
-        StartFileWatcher();
     }
 
     /// <summary>
@@ -375,99 +368,6 @@ public static class LocalizationManager
         }
 
         return "en";
-    }
-
-    // ── file-system watcher / hot-reload ──────────────────────────
-
-    /// <summary>
-    /// Starts monitoring the Languages directory. Any .json file created,
-    /// changed, deleted, or renamed triggers a debounced reload of the
-    /// current language.
-    /// </summary>
-    private static void StartFileWatcher()
-    {
-        try
-        {
-            var dir = GetLanguageDirectory();
-            if (!Directory.Exists(dir))
-                return;
-
-            _watcher = new FileSystemWatcher(dir, "*.json")
-            {
-                NotifyFilter = NotifyFilters.LastWrite
-                             | NotifyFilters.FileName
-                             | NotifyFilters.CreationTime,
-                EnableRaisingEvents = true
-            };
-
-            // Debounce timer: batch rapid file-change events into a single reload.
-            _reloadDebounce = new System.Timers.Timer(300) { AutoReset = false };
-            _reloadDebounce.Elapsed += OnFileChangedDebounced;
-
-            _watcher.Changed += OnLanguageFileChanged;
-            _watcher.Created += OnLanguageFileChanged;
-            _watcher.Deleted += OnLanguageFileChanged;
-            _watcher.Renamed += OnLanguageFileChanged;
-        }
-        catch
-        {
-            // File watching is a best-effort feature; app still works without it.
-            StopFileWatcher();
-        }
-    }
-
-    private static void StopFileWatcher()
-    {
-        try
-        {
-            _reloadDebounce?.Stop();
-            _reloadDebounce?.Dispose();
-            _reloadDebounce = null;
-
-            _watcher?.Dispose();
-            _watcher = null;
-        }
-        catch
-        {
-            // Best-effort cleanup.
-        }
-    }
-
-    private static void OnLanguageFileChanged(object sender, FileSystemEventArgs e)
-    {
-        // Restart the debounce timer — only reload once the events settle.
-        _reloadDebounce?.Stop();
-        _reloadDebounce?.Start();
-    }
-
-    private static void OnFileChangedDebounced(object sender, ElapsedEventArgs e)
-    {
-        try
-        {
-            lock (_reloadLock)
-            {
-                var langToReload = _currentLanguage;
-
-                // If the current language file still exists, reload it.
-                // Otherwise the language may have been renamed — an event
-                // will fire separately to pick up the new name.
-                if (File.Exists(GetLanguageFilePath(langToReload)))
-                {
-                    LoadLanguage(langToReload);
-                }
-                else
-                {
-                    // Current language was deleted — fall back to English.
-                    LoadLanguage("en");
-                }
-
-                LanguageChanged?.Invoke();
-            }
-        }
-        catch
-        {
-            // Swallow watcher exceptions to avoid crashing the app.
-        }
     }
 
     // ── path helpers ──────────────────────────────────────────────
