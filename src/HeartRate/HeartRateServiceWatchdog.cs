@@ -57,7 +57,7 @@ internal class HeartRateServiceWatchdog : IDisposable
 
             if (needsRefresh)
             {
-                DebugLog.WriteLog("Restarting services...");
+                DebugLog.WriteLog(LocalizationManager.GetString("watchdog.restarting"));
                 try
                 {
                     _service.InitiateDefault();
@@ -65,14 +65,14 @@ internal class HeartRateServiceWatchdog : IDisposable
                 }
                 catch (Exception e)
                 {
-                    DebugLog.WriteLog($"Failed restart: {e}");
+                    DebugLog.WriteLog(LocalizationManager.GetString("watchdog.failedRestart", e));
                 }
             }
 
             Thread.Sleep(10000);
         }
 
-        DebugLog.WriteLog("Watchdog thread exiting.");
+        DebugLog.WriteLog(LocalizationManager.GetString("watchdog.exiting"));
     }
 
     public void Dispose()
