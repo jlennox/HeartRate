@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -43,6 +44,10 @@ public partial class HeartRateForm : Form
     private readonly Queue<Font> _lastFonts = new();
     private IntPtr _oldIconHandle;
 
+    // Language submenu items
+    private ToolStripMenuItem _languageMenu;
+    private ToolStripSeparator _languageSeparator;
+
     public HeartRateForm() : this(
         Environment.CommandLine.Contains("--test")
             ? new TestHeartRateService()
@@ -76,6 +81,9 @@ public partial class HeartRateForm : Form
             _watchdog = new HeartRateServiceWatchdog(TimeSpan.FromSeconds(10), _service);
 
             InitializeComponent();
+
+            // Build the language switching submenu
+            BuildLanguageMenu();
 
             FormBorderStyle = _settings.Sizable
                 ? FormBorderStyle.Sizable
@@ -112,11 +120,46 @@ public partial class HeartRateForm : Form
 
         Size = _settings.UIWindowSize;
 
+        // Initialize tray icon to display "0" before the first valid reading.
+        InitializeIconWithZero();
+
         _service.HeartRateUpdated += Service_HeartRateUpdated;
 
         Task.Factory.StartNew(_service.InitiateDefault);
 
         UpdateUI();
+    }
+
+    private void InitializeIconWithZero()
+    {
+        uxBpmNotifyIcon.Text = "0";
+
+        _iconGraphics.Clear(Color.Transparent);
+
+        var sizingMeasurement = _iconGraphics
+            .MeasureString("0", _measurementFont);
+
+        using (var brush = new SolidBrush(_settings.Color))
+        using (var font = new Font(_settings.FontName,
+                   _iconHeight * (_iconWidth / sizingMeasurement.Width),
+                   GraphicsUnit.Pixel))
+        {
+            _iconGraphics.DrawString(
+                "0", font, brush,
+                new RectangleF(0, 0, _iconWidth, _iconHeight),
+                _iconStringFormat);
+        }
+
+        _iconText = "0";
+
+        var iconHandle = _iconBitmap.GetHicon();
+
+        using (var icon = Icon.FromHandle(iconHandle))
+        {
+            uxBpmNotifyIcon.Icon = icon;
+        }
+
+        _oldIconHandle = iconHandle;
     }
 
     private void Service_HeartRateUpdated(HeartRateReading reading)
@@ -172,25 +215,15 @@ public partial class HeartRateForm : Form
             if (reading.IsError)
             {
                 uxBpmNotifyIcon.Text = reading.Error.Truncate(60);
-                iconText = reading.Error;
             }
             else if (isDisconnected)
             {
-                var description = $"Disconnected {status} ({bpm})";
+                var description = LocalizationManager.GetString("status.disconnected", status, bpm);
                 uxBpmNotifyIcon.Text = description;
 
                 if (!_disconnectedTimeout.IsRunning)
                 {
                     _disconnectedTimeout.Start();
-                }
-
-                if (_disconnectedTimeout.Elapsed >
-                    _settings.DisconnectedTimeout)
-                {
-                    // Originally this used " ⃠" (U+20E0, "Prohibition Symbol")
-                    // but MeasureString was only returning ~half of the
-                    // width.
-                    iconText = description;
                 }
             }
             else
@@ -217,7 +250,11 @@ public partial class HeartRateForm : Form
                     _iconStringFormat);
             }
 
-            _iconText = iconText;
+            // Tray icon always shows BPM value; main window label shows
+            // error/disconnected descriptions when applicable.
+            _iconText = reading.IsError ? reading.Error.Truncate(63)
+                : isDisconnected ? LocalizationManager.GetString("status.disconnected", status, bpm)
+                : iconText;
 
             var iconHandle = _iconBitmap.GetHicon();
 
@@ -230,7 +267,7 @@ public partial class HeartRateForm : Form
                 {
                     _alertTimeout.Restart();
 
-                    var alertText = $"BPMs @ {bpm}";
+                    var alertText = LocalizationManager.GetString("alert.bpm", bpm);
 
                     uxBpmNotifyIcon.ShowBalloonTip(
                         (int)_settings.AlertTimeout.TotalMilliseconds,
@@ -308,7 +345,7 @@ public partial class HeartRateForm : Form
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show($"Unable to load background image file \"{backgroundFile}\" due to error: {e}");
+                    MessageBox.Show(LocalizationManager.GetString("error.loadBackgroundImage", backgroundFile, e));
                 }
             }
             else
@@ -554,27 +591,22 @@ public partial class HeartRateForm : Form
         })
         {
             IsBackground = true,
-            Name = "Edit config"
+            Name = LocalizationManager.GetString("thread.editConfig")
         };
 
         thread.Start();
     }
 
-    private void uxExitMenuItem_Click(object sender, EventArgs e)
-    {
-        uxBpmNotifyIcon.Dispose();
-        Environment.Exit(0);
-    }
-
+    private void uxExitMenuItem_Click(object sender, EventArgs e) => Environment.Exit(0);
     private void editFontColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.Color);
     private void editIconFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.WarnColor);
     private void editWindowFontColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.UIColor);
     private void editWindowFontWarningColorToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSettingColor(ref _settings.UIWarnColor);
-    private void setCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.LogFile, "CSV Files|*.csv|All files (*.*)|*.*");
+    private void setCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.LogFile, LocalizationManager.GetString("dialog.filter.csvFiles"));
     private void unsetCSVOutputFileToolStripMenuItem_Click(object sender, EventArgs e) => UnsetFileSetting(ref _settings.LogFile);
-    private void setHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.HeartRateFile, "Text Files|*.txt|All files (*.*)|*.*");
+    private void setHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.HeartRateFile, LocalizationManager.GetString("dialog.filter.textFiles"));
     private void unsetHeartRateFileToolStripMenuItem_Click(object sender, EventArgs e) => UnsetFileSetting(ref _settings.HeartRateFile);
-    private void setIBIFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.IBIFile, "Text Files|*.txt|All files (*.*)|*.*");
+    private void setIBIFileToolStripMenuItem_Click(object sender, EventArgs e) => UpdateSaveFileSetting(ref _settings.IBIFile, LocalizationManager.GetString("dialog.filter.textFiles"));
     private void unsetIBIFileToolStripMenuItem_Click(object sender, EventArgs e) => UnsetFileSetting(ref _settings.IBIFile);
 
     private void selectIconFontToolStripMenuItem_Click(object sender, EventArgs e)
@@ -607,7 +639,7 @@ public partial class HeartRateForm : Form
 
     private void selectBackgroundImageToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        if (!Prompt.TryFile(_settings.UIBackgroundFile, "Image files|*.bmp;*.gif;*.jpeg;*.png;*.tiff|All files (*.*)|*.*", out var file)) return;
+        if (!Prompt.TryFile(_settings.UIBackgroundFile, LocalizationManager.GetString("dialog.filter.imageFiles"), out var file)) return;
 
         lock (_updateSync)
         {
@@ -671,60 +703,113 @@ public partial class HeartRateForm : Form
         UpdateUI();
     }
 
-    //protected override void OnPaint(PaintEventArgs e)
-    //{
-    //    //base.OnPaint(e);
-    //
-    //    lock (_updateSync)
-    //    {
-    //        var flags = TextFormatFlags.SingleLine | TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix;
-    //
-    //        switch (_settings.UITextAlignment)
-    //        {
-    //            case ContentAlignment.TopCenter:
-    //            case ContentAlignment.TopLeft:
-    //            case ContentAlignment.TopRight:
-    //                flags |= TextFormatFlags.Top;
-    //                break;
-    //            case ContentAlignment.MiddleCenter:
-    //            case ContentAlignment.MiddleLeft:
-    //            case ContentAlignment.MiddleRight:
-    //                flags |= TextFormatFlags.VerticalCenter;
-    //                break;
-    //            case ContentAlignment.BottomCenter:
-    //            case ContentAlignment.BottomLeft:
-    //            case ContentAlignment.BottomRight:
-    //                flags |= TextFormatFlags.Bottom;
-    //                break;
-    //        }
-    //
-    //        switch (_settings.UITextAlignment)
-    //        {
-    //            case ContentAlignment.TopLeft:
-    //            case ContentAlignment.MiddleLeft:
-    //            case ContentAlignment.BottomLeft:
-    //                flags |= TextFormatFlags.Left;
-    //                break;
-    //            case ContentAlignment.TopCenter:
-    //            case ContentAlignment.MiddleCenter:
-    //            case ContentAlignment.BottomCenter:
-    //                flags |= TextFormatFlags.HorizontalCenter;
-    //                break;
-    //            case ContentAlignment.TopRight:
-    //            case ContentAlignment.MiddleRight:
-    //            case ContentAlignment.BottomRight:
-    //                flags |= TextFormatFlags.Right;
-    //                break;
-    //        }
-    //
-    //        //TextRenderer.DrawText(
-    //        //    e.Graphics, uxBpmLabel.Text, uxBpmLabel.Font,
-    //        //    ClientRectangle, uxBpmLabel.ForeColor, Color.Transparent, flags);
-    //        //
-    //        TextRenderer.DrawText(
-    //            e.Graphics, uxBpmLabel.Text, uxBpmLabel.Font,
-    //            ClientRectangle, uxBpmLabel.ForeColor, Color.Transparent, flags);
-    //    }
-    //}
+    #endregion
+
+    #region Localization
+
+    private void BuildLanguageMenu()
+    {
+        var availableLanguages = LocalizationManager.GetAvailableLanguages();
+
+        _languageSeparator = new ToolStripSeparator();
+
+        _languageMenu = new ToolStripMenuItem
+        {
+            Text = LocalizationManager.GetString("menu.language"),
+            Name = "languageToolStripMenuItem"
+        };
+
+        foreach (var lang in availableLanguages)
+        {
+            var langItem = new ToolStripMenuItem
+            {
+                Text = lang,
+                Tag = lang,
+                Checked = string.Equals(lang,
+                    LocalizationManager.CurrentLanguage,
+                    StringComparison.OrdinalIgnoreCase)
+            };
+
+            langItem.Click += LanguageMenuItem_Click;
+            _languageMenu.DropDownItems.Add(langItem);
+        }
+
+        // Insert before Exit menu item at the bottom
+        var items = uxNotifyIconContextMenu.Items;
+        items.Insert(items.Count - 1, _languageMenu);
+        items.Insert(items.Count - 1, _languageSeparator);
+
+        // Subscribe to language change events for dynamic updates
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        Invoke(new Action(ApplyLocalization));
+    }
+
+    private void ApplyLocalization()
+    {
+        // Update all UI strings
+        Text = LocalizationManager.GetString("form.title");
+        uxBpmLabel.Text = LocalizationManager.GetString("label.starting");
+        selectIconFontToolStripMenuItem.Text = LocalizationManager.GetString("menu.selectIconFont");
+        editFontColorToolStripMenuItem.Text = LocalizationManager.GetString("menu.editFontColor");
+        editIconFontWarningColorToolStripMenuItem.Text = LocalizationManager.GetString("menu.editIconFontWarningColor");
+        selectWindowFontToolStripMenuItem.Text = LocalizationManager.GetString("menu.selectWindowFont");
+        doNotScaleFontToolStripMenuItem.Text = LocalizationManager.GetString("menu.doNotScaleFont");
+        doNotScaleFontToolStripMenuItem.ToolTipText = LocalizationManager.GetString("menu.doNotScaleFont.tooltip");
+        editWindowFontColorToolStripMenuItem.Text = LocalizationManager.GetString("menu.editWindowFontColor");
+        editWindowFontWarningColorToolStripMenuItem.Text = LocalizationManager.GetString("menu.editWindowFontWarningColor");
+        textAlignmentToolStripMenuItem.Text = LocalizationManager.GetString("menu.textAlignment");
+        selectBackgroundImageToolStripMenuItem.Text = LocalizationManager.GetString("menu.selectBackgroundImage");
+        removeBackgroundImageToolStripMenuItem.Text = LocalizationManager.GetString("menu.removeBackgroundImage");
+        backgroundImagePositionToolStripMenuItem.Text = LocalizationManager.GetString("menu.backgroundImagePosition");
+        uxEditSettingsMenuItem.Text = LocalizationManager.GetString("menu.editSettingsXML");
+        uxExitMenuItem.Text = LocalizationManager.GetString("menu.exit");
+        setHeartRateFileToolStripMenuItem.Text = LocalizationManager.GetString("menu.setHeartRateFile");
+        setHeartRateFileToolStripMenuItem.ToolTipText = LocalizationManager.GetString("menu.setHeartRateFile.tooltip");
+        unsetHeartRateFileToolStripMenuItem.Text = LocalizationManager.GetString("menu.unsetHeartRateFile");
+        setCSVOutputFileToolStripMenuItem.Text = LocalizationManager.GetString("menu.setCSVOutputFile");
+        setCSVOutputFileToolStripMenuItem.ToolTipText = LocalizationManager.GetString("menu.setCSVOutputFile.tooltip");
+        unsetCSVOutputFileToolStripMenuItem.Text = LocalizationManager.GetString("menu.unsetCSVOutputFile");
+        setIBIFileToolStripMenuItem.Text = LocalizationManager.GetString("menu.setIBIFile");
+        setIBIFileToolStripMenuItem.ToolTipText = LocalizationManager.GetString("menu.setIBIFile.tooltip");
+        unsetIBIFileToolStripMenuItem.Text = LocalizationManager.GetString("menu.unsetIBIFile");
+
+        // Update language menu title and checkmarks
+        if (_languageMenu != null)
+        {
+            _languageMenu.Text = LocalizationManager.GetString("menu.language");
+
+            foreach (ToolStripMenuItem item in _languageMenu.DropDownItems)
+            {
+                if (item.Tag is string lang)
+                {
+                    item.Checked = string.Equals(lang,
+                        LocalizationManager.CurrentLanguage,
+                        StringComparison.OrdinalIgnoreCase);
+                }
+            }
+        }
+
+        Invalidate();
+    }
+
+    private void LanguageMenuItem_Click(object sender, EventArgs e)
+    {
+        if (!(sender is ToolStripMenuItem menuItem) || !(menuItem.Tag is string lang))
+            return;
+
+        LocalizationManager.SetLanguage(lang);
+
+        // Persist the language choice so it's restored on next launch.
+        lock (_settings)
+        {
+            _settings.Language = lang;
+            _settings.Save();
+        }
+    }
+
     #endregion
 }

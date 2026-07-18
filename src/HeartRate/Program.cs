@@ -16,6 +16,16 @@ static class Program
     {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
+
+        // Load saved settings to restore the last language choice.
+        var settingsFile = HeartRateSettings.GetFilename();
+        var settings = HeartRateSettings.CreateDefault(settingsFile);
+        settings.Load();
+        var savedLanguage = settings.Language;
+
+        // Initialize localization: use saved language if available, otherwise auto-detect.
+        LocalizationManager.Initialize(savedLanguage);
+
         Application.Run(new HeartRateForm());
     }
 }
