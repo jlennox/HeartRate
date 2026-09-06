@@ -18,6 +18,7 @@ public class HeartRateSettings
     public Size UIWindowSize => new(UIWindowSizeX, UIWindowSizeY);
 
     public int Version;
+    public string Language;
     public string FontName;
     public string UIFontName;
     public bool UIFontUseSize;
@@ -38,7 +39,6 @@ public class HeartRateSettings
     public string UIBackgroundFile;
     public ImageLayout UIBackgroundLayout;
     public bool Sizable;
-    public string Language;
     public string LogFormat;
     public string LogDateFormat;
     public string LogFile;
@@ -60,8 +60,8 @@ public class HeartRateSettings
             UIFontStyle = FontStyle.Regular,
             UIFontSize = 20,
             UIFontUseSize = false,
-            UIWindowSizeX = 800,
-            UIWindowSizeY = 600,
+            UIWindowSizeX = 350,
+            UIWindowSizeY = 250,
             UITextAlignment = ContentAlignment.MiddleCenter,
             WarnLevel = 65,
             AlertLevel = 70,
@@ -80,7 +80,6 @@ public class HeartRateSettings
             LogFile = " ", // Initialize to " " instead of null so the entry is still written.
             IBIFile = " ",
             HeartRateFile = " ",
-            Language = null,
             UDP = default
         };
     }
@@ -99,6 +98,7 @@ public class HeartRateSettings
             return;
         }
 
+        Language = UiText.NormalizeLanguage(protocol.Language);
         FontName = protocol.FontName;
         UIFontName = protocol.UIFontName;
         UIFontStyle = EnumOrDefault(protocol.UIFontStyle, FontStyle.Regular);
@@ -119,7 +119,6 @@ public class HeartRateSettings
         UIBackgroundFile = protocol.UIBackgroundFile;
         UIBackgroundLayout = EnumOrDefault(protocol.UIBackgroundLayout, ImageLayout.Stretch);
         Sizable = protocol.Sizable;
-        Language = protocol.Language;
         LogFormat = protocol.LogFormat;
         LogDateFormat = protocol.LogDateFormat;
         LogFile = protocol.LogFile;
@@ -130,8 +129,8 @@ public class HeartRateSettings
         // A hack fix from a bug that's been fixed.
         if (UITextAlignment == 0) UITextAlignment = ContentAlignment.MiddleCenter;
         if (UIFontSize <= 0) UIFontSize = 20;
-        if (UIWindowSizeX <= 0) UIWindowSizeX = 800;
-        if (UIWindowSizeY <= 0) UIWindowSizeY = 600;
+        if (UIWindowSizeX <= 0) UIWindowSizeX = 350;
+        if (UIWindowSizeY <= 0) UIWindowSizeY = 250;
 
         // In the future:
         // if (protocol.Version >= 2) ...
@@ -150,6 +149,7 @@ public class HeartRateSettings
         return new HeartRateSettings(_filename)
         {
             Version = Version,
+            Language = Language,
             FontName = FontName,
             UIFontName = UIFontName,
             UIFontStyle = UIFontStyle,
@@ -175,7 +175,6 @@ public class HeartRateSettings
             LogFile = LogFile,
             IBIFile = IBIFile,
             HeartRateFile = HeartRateFile,
-            Language = Language,
             UDP = UDP,
         };
     }
@@ -263,6 +262,7 @@ public class HeartRateSettingsProtocol
     // Do not remove the setter as it's needed by the serializer.
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
     public int Version { get; set; }
+    public string Language { get; set; }
     public string FontName { get; set; }
     public string UIFontName { get; set; }
     public string UIFontStyle { get; set; }
@@ -288,7 +288,6 @@ public class HeartRateSettingsProtocol
     public string LogFile { get; set; }
     public string IBIFile { get; set; }
     public string HeartRateFile { get; set; }
-    public string Language { get; set; }
     public string UDP { get; set; }
     // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
 
@@ -299,6 +298,7 @@ public class HeartRateSettingsProtocol
     private HeartRateSettingsProtocol(HeartRateSettings settings)
     {
         Version = settings.Version;
+        Language = settings.Language;
         FontName = settings.FontName;
         AlertLevel = settings.AlertLevel;
         UIFontName = settings.UIFontName;
@@ -324,7 +324,6 @@ public class HeartRateSettingsProtocol
         LogFile = settings.LogFile ?? " ";
         IBIFile = settings.IBIFile ?? " ";
         HeartRateFile = settings.HeartRateFile ?? " ";
-        Language = settings.Language;
         UDP = settings.UDP.ToString() ?? " ";
     }
 

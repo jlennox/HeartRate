@@ -99,10 +99,10 @@ internal class HeartRateService : IHeartRateService
 
         if (device == null)
         {
-            _log.Write(LocalizationManager.GetString("service.noDevice"));
+            _log.Write("Unable to locate a device.");
             throw new ArgumentNullException(
                 nameof(device),
-                LocalizationManager.GetString("service.deviceNotFound"));
+                "Unable to locate heart rate device. Ensure it's connected and paired.");
         }
 
         var properties = string.Join(",", device.Properties.Select(t => $"{t.Key}: {t.Value}"));
@@ -128,9 +128,9 @@ internal class HeartRateService : IHeartRateService
 
         if (service == null)
         {
-            _log.Write(LocalizationManager.GetString("service.nullService"));
+            _log.Write("service null");
             throw new ArgumentOutOfRangeException(
-                LocalizationManager.GetString("service.cannotGetService", device.Name, device.Id));
+                $"Unable to get service to {device.Name} ({device.Id}). Is the device inuse by another program? The Bluetooth adaptor may need to be turned off and on again.");
         }
 
         var heartrate = service
@@ -140,7 +140,7 @@ internal class HeartRateService : IHeartRateService
         if (heartrate == null)
         {
             throw new ArgumentOutOfRangeException(
-                LocalizationManager.GetString("service.cannotLocateMeasurement", device.Name, device.Id));
+                $"Unable to locate heart rate measurement on device {device.Name} ({device.Id}).");
         }
 
         _log.Write($"Service [CharacteristicProperties: {heartrate.CharacteristicProperties}, UserDescription: {heartrate.UserDescription}]");
@@ -158,7 +158,7 @@ internal class HeartRateService : IHeartRateService
         {
             throw new ArgumentOutOfRangeException(
                 nameof(status), status,
-                LocalizationManager.GetString("service.configureFailed"));
+                "Attempt to configure service failed.");
         }
     }
 
