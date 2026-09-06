@@ -51,7 +51,7 @@ internal static class Prompt
         {
             CheckFileExists = true,
             FileName = current,
-            Filter = filter
+            Filter = UiText.FileFilter(filter)
         };
 
         if (dlg.ShowDialog() != DialogResult.OK) return false;
@@ -67,7 +67,7 @@ internal static class Prompt
         using var dlg = new SaveFileDialog
         {
             FileName = current,
-            Filter = filter
+            Filter = UiText.FileFilter(filter)
         };
 
         if (dlg.ShowDialog() != DialogResult.OK) return false;

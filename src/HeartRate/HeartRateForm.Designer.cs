@@ -49,7 +49,7 @@
             // uxBpmNotifyIcon
             // 
             this.uxBpmNotifyIcon.ContextMenuStrip = this.uxNotifyIconContextMenu;
-            this.uxBpmNotifyIcon.Text = "notifyIcon1";
+            this.uxBpmNotifyIcon.Text = UiText.Get("Starting...");
             this.uxBpmNotifyIcon.Visible = true;
             this.uxBpmNotifyIcon.MouseClick += new System.Windows.Forms.MouseEventHandler(this.uxBpmNotifyIcon_MouseClick);
             // 
@@ -82,27 +82,27 @@
             this.uxExitMenuItem});
             this.uxNotifyIconContextMenu.Name = "uxNotifyIconContextMenu";
             this.uxNotifyIconContextMenu.Size = new System.Drawing.Size(345, 669);
-            this.uxNotifyIconContextMenu.Text = "Background image layout";
+            this.uxNotifyIconContextMenu.Text = UiText.Get("Background image layout");
             // 
             // selectIconFontToolStripMenuItem
             // 
             this.selectIconFontToolStripMenuItem.Name = "selectIconFontToolStripMenuItem";
             this.selectIconFontToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.selectIconFontToolStripMenuItem.Text = "Select icon font...";
+            this.selectIconFontToolStripMenuItem.Text = UiText.Get("Select icon font...");
             this.selectIconFontToolStripMenuItem.Click += new System.EventHandler(this.selectIconFontToolStripMenuItem_Click);
             // 
             // editFontColorToolStripMenuItem
             // 
             this.editFontColorToolStripMenuItem.Name = "editFontColorToolStripMenuItem";
             this.editFontColorToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.editFontColorToolStripMenuItem.Text = "Edit icon font color...";
+            this.editFontColorToolStripMenuItem.Text = UiText.Get("Edit icon font color...");
             this.editFontColorToolStripMenuItem.Click += new System.EventHandler(this.editFontColorToolStripMenuItem_Click);
             // 
             // editIconFontWarningColorToolStripMenuItem
             // 
             this.editIconFontWarningColorToolStripMenuItem.Name = "editIconFontWarningColorToolStripMenuItem";
             this.editIconFontWarningColorToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.editIconFontWarningColorToolStripMenuItem.Text = "Edit icon font warning color...";
+            this.editIconFontWarningColorToolStripMenuItem.Text = UiText.Get("Edit icon font warning color...");
             this.editIconFontWarningColorToolStripMenuItem.Click += new System.EventHandler(this.editIconFontWarningColorToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
@@ -114,37 +114,36 @@
             // 
             this.selectWindowFontToolStripMenuItem.Name = "selectWindowFontToolStripMenuItem";
             this.selectWindowFontToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.selectWindowFontToolStripMenuItem.Text = "Select window font...";
+            this.selectWindowFontToolStripMenuItem.Text = UiText.Get("Select window font...");
             this.selectWindowFontToolStripMenuItem.Click += new System.EventHandler(this.selectWindowFontToolStripMenuItem_Click);
             // 
             // doNotScaleFontToolStripMenuItem
             // 
             this.doNotScaleFontToolStripMenuItem.Name = "doNotScaleFontToolStripMenuItem";
             this.doNotScaleFontToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.doNotScaleFontToolStripMenuItem.Text = "Do not scale font";
-            this.doNotScaleFontToolStripMenuItem.ToolTipText = "Do not automatically scale the font with the window. The font can be set inside t" +
-    "he \"Select window font\" dialog.";
+            this.doNotScaleFontToolStripMenuItem.Text = UiText.Get("Do not scale font");
+            this.doNotScaleFontToolStripMenuItem.ToolTipText = UiText.Get("Keep the font size fixed when resizing the window. Set the size in the font dialog.");
             this.doNotScaleFontToolStripMenuItem.Click += new System.EventHandler(this.doNotScaleFontToolStripMenuItem_Click);
             // 
             // editWindowFontColorToolStripMenuItem
             // 
             this.editWindowFontColorToolStripMenuItem.Name = "editWindowFontColorToolStripMenuItem";
             this.editWindowFontColorToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.editWindowFontColorToolStripMenuItem.Text = "Edit window font color...";
+            this.editWindowFontColorToolStripMenuItem.Text = UiText.Get("Edit window font color...");
             this.editWindowFontColorToolStripMenuItem.Click += new System.EventHandler(this.editWindowFontColorToolStripMenuItem_Click);
             // 
             // editWindowFontWarningColorToolStripMenuItem
             // 
             this.editWindowFontWarningColorToolStripMenuItem.Name = "editWindowFontWarningColorToolStripMenuItem";
             this.editWindowFontWarningColorToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.editWindowFontWarningColorToolStripMenuItem.Text = "Edit window font warning color...";
+            this.editWindowFontWarningColorToolStripMenuItem.Text = UiText.Get("Edit window font warning color...");
             this.editWindowFontWarningColorToolStripMenuItem.Click += new System.EventHandler(this.editWindowFontWarningColorToolStripMenuItem_Click);
             // 
             // textAlignmentToolStripMenuItem
             // 
             this.textAlignmentToolStripMenuItem.Name = "textAlignmentToolStripMenuItem";
             this.textAlignmentToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.textAlignmentToolStripMenuItem.Text = "Text alignment";
+            this.textAlignmentToolStripMenuItem.Text = UiText.Get("Text alignment");
             // 
             // toolStripSeparator1
             // 
@@ -155,21 +154,21 @@
             // 
             this.selectBackgroundImageToolStripMenuItem.Name = "selectBackgroundImageToolStripMenuItem";
             this.selectBackgroundImageToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.selectBackgroundImageToolStripMenuItem.Text = "Select background image...";
+            this.selectBackgroundImageToolStripMenuItem.Text = UiText.Get("Select background image...");
             this.selectBackgroundImageToolStripMenuItem.Click += new System.EventHandler(this.selectBackgroundImageToolStripMenuItem_Click);
             // 
             // removeBackgroundImageToolStripMenuItem
             // 
             this.removeBackgroundImageToolStripMenuItem.Name = "removeBackgroundImageToolStripMenuItem";
             this.removeBackgroundImageToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.removeBackgroundImageToolStripMenuItem.Text = "Remove background image";
+            this.removeBackgroundImageToolStripMenuItem.Text = UiText.Get("Remove background image");
             this.removeBackgroundImageToolStripMenuItem.Click += new System.EventHandler(this.removeBackgroundImageToolStripMenuItem_Click);
             // 
             // backgroundImagePositionToolStripMenuItem
             // 
             this.backgroundImagePositionToolStripMenuItem.Name = "backgroundImagePositionToolStripMenuItem";
             this.backgroundImagePositionToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.backgroundImagePositionToolStripMenuItem.Text = "Background image position";
+            this.backgroundImagePositionToolStripMenuItem.Text = UiText.Get("Background image position");
             // 
             // toolStripMenuItem1
             // 
@@ -180,14 +179,14 @@
             // 
             this.uxEditSettingsMenuItem.Name = "uxEditSettingsMenuItem";
             this.uxEditSettingsMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.uxEditSettingsMenuItem.Text = "Edit settings XML...";
+            this.uxEditSettingsMenuItem.Text = UiText.Get("Edit settings XML...");
             this.uxEditSettingsMenuItem.Click += new System.EventHandler(this.uxMenuEditSettings_Click);
             // 
             // uxExitMenuItem
             // 
             this.uxExitMenuItem.Name = "uxExitMenuItem";
             this.uxExitMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.uxExitMenuItem.Text = "Exit";
+            this.uxExitMenuItem.Text = UiText.Get("Exit");
             this.uxExitMenuItem.Click += new System.EventHandler(this.uxExitMenuItem_Click);
             // 
             // uxBpmLabel
@@ -202,7 +201,7 @@
             this.uxBpmLabel.Name = "uxBpmLabel";
             this.uxBpmLabel.Size = new System.Drawing.Size(464, 174);
             this.uxBpmLabel.TabIndex = 0;
-            this.uxBpmLabel.Text = "Starting...";
+            this.uxBpmLabel.Text = UiText.Get("Starting...");
             this.uxBpmLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.uxBpmLabel.UseCompatibleTextRendering = true;
             // 
@@ -210,47 +209,45 @@
             // 
             this.setHeartRateFileToolStripMenuItem.Name = "setHeartRateFileToolStripMenuItem";
             this.setHeartRateFileToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.setHeartRateFileToolStripMenuItem.Text = "Set heart rate file...";
-            this.setHeartRateFileToolStripMenuItem.ToolTipText = resources.GetString("setHeartRateFileToolStripMenuItem.ToolTipText");
+            this.setHeartRateFileToolStripMenuItem.Text = UiText.Get("Set heart rate file...");
+            this.setHeartRateFileToolStripMenuItem.ToolTipText = UiText.Get("Write the latest heart rate to this file, replacing its previous contents. Supports date tokens such as %date:MM-dd-yyyy%.");
             this.setHeartRateFileToolStripMenuItem.Click += new System.EventHandler(this.setHeartRateFileToolStripMenuItem_Click);
             // 
             // unsetHeartRateFileToolStripMenuItem
             // 
             this.unsetHeartRateFileToolStripMenuItem.Name = "unsetHeartRateFileToolStripMenuItem";
             this.unsetHeartRateFileToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.unsetHeartRateFileToolStripMenuItem.Text = "Unset heart rate file";
+            this.unsetHeartRateFileToolStripMenuItem.Text = UiText.Get("Unset heart rate file");
             this.unsetHeartRateFileToolStripMenuItem.Click += new System.EventHandler(this.unsetHeartRateFileToolStripMenuItem_Click);
             // 
             // setCSVOutputFileToolStripMenuItem
             // 
             this.setCSVOutputFileToolStripMenuItem.Name = "setCSVOutputFileToolStripMenuItem";
             this.setCSVOutputFileToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.setCSVOutputFileToolStripMenuItem.Text = "Set CSV output file...";
-            this.setCSVOutputFileToolStripMenuItem.ToolTipText = resources.GetString("setCSVOutputFileToolStripMenuItem.ToolTipText");
+            this.setCSVOutputFileToolStripMenuItem.Text = UiText.Get("Set CSV output file...");
+            this.setCSVOutputFileToolStripMenuItem.ToolTipText = UiText.Get("Write recorded readings to this file. Leave empty to disable file logging. Supports %date% or a custom format such as %date:MM-dd-yyyy%.");
             this.setCSVOutputFileToolStripMenuItem.Click += new System.EventHandler(this.setCSVOutputFileToolStripMenuItem_Click);
             // 
             // unsetCSVOutputFileToolStripMenuItem
             // 
             this.unsetCSVOutputFileToolStripMenuItem.Name = "unsetCSVOutputFileToolStripMenuItem";
             this.unsetCSVOutputFileToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.unsetCSVOutputFileToolStripMenuItem.Text = "Unset CSV output file";
+            this.unsetCSVOutputFileToolStripMenuItem.Text = UiText.Get("Unset CSV output file");
             this.unsetCSVOutputFileToolStripMenuItem.Click += new System.EventHandler(this.unsetCSVOutputFileToolStripMenuItem_Click);
             // 
             // setIBIFileToolStripMenuItem
             // 
             this.setIBIFileToolStripMenuItem.Name = "setIBIFileToolStripMenuItem";
             this.setIBIFileToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.setIBIFileToolStripMenuItem.Text = "Set IBI file...";
-            this.setIBIFileToolStripMenuItem.ToolTipText = "The full path of where to write the IBI data to. Writes log of RR-Intervals in mi" +
-    "lliseconds in IBI supported file format. Supports date syntax like `LogFile` doe" +
-    "s.";
+            this.setIBIFileToolStripMenuItem.Text = UiText.Get("Set IBI file...");
+            this.setIBIFileToolStripMenuItem.ToolTipText = UiText.Get("Write RR intervals in milliseconds in IBI format. Supports date tokens such as %date:MM-dd-yyyy%.");
             this.setIBIFileToolStripMenuItem.Click += new System.EventHandler(this.setIBIFileToolStripMenuItem_Click);
             // 
             // unsetIBIFileToolStripMenuItem
             // 
             this.unsetIBIFileToolStripMenuItem.Name = "unsetIBIFileToolStripMenuItem";
             this.unsetIBIFileToolStripMenuItem.Size = new System.Drawing.Size(344, 32);
-            this.unsetIBIFileToolStripMenuItem.Text = "Unset IBI file";
+            this.unsetIBIFileToolStripMenuItem.Text = UiText.Get("Unset IBI file");
             this.unsetIBIFileToolStripMenuItem.Click += new System.EventHandler(this.unsetIBIFileToolStripMenuItem_Click);
             // 
             // toolStripMenuItem3
@@ -269,7 +266,7 @@
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "HeartRateForm";
             this.ShowInTaskbar = false;
-            this.Text = "Heart rate monitor";
+            this.Text = UiText.Get("Heart rate monitor");
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.HeartRateForm_FormClosing);
             this.Load += new System.EventHandler(this.HeartRateForm_Load);
             this.ResizeEnd += new System.EventHandler(this.HeartRateForm_ResizeEnd);
@@ -307,4 +304,3 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
     }
 }
-

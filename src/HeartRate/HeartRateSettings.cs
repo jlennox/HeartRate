@@ -18,6 +18,7 @@ public class HeartRateSettings
     public Size UIWindowSize => new(UIWindowSizeX, UIWindowSizeY);
 
     public int Version;
+    public string Language;
     public string FontName;
     public string UIFontName;
     public bool UIFontUseSize;
@@ -97,6 +98,7 @@ public class HeartRateSettings
             return;
         }
 
+        Language = UiText.NormalizeLanguage(protocol.Language);
         FontName = protocol.FontName;
         UIFontName = protocol.UIFontName;
         UIFontStyle = EnumOrDefault(protocol.UIFontStyle, FontStyle.Regular);
@@ -147,6 +149,7 @@ public class HeartRateSettings
         return new HeartRateSettings(_filename)
         {
             Version = Version,
+            Language = Language,
             FontName = FontName,
             UIFontName = UIFontName,
             UIFontStyle = UIFontStyle,
@@ -259,6 +262,7 @@ public class HeartRateSettingsProtocol
     // Do not remove the setter as it's needed by the serializer.
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
     public int Version { get; set; }
+    public string Language { get; set; }
     public string FontName { get; set; }
     public string UIFontName { get; set; }
     public string UIFontStyle { get; set; }
@@ -294,6 +298,7 @@ public class HeartRateSettingsProtocol
     private HeartRateSettingsProtocol(HeartRateSettings settings)
     {
         Version = settings.Version;
+        Language = settings.Language;
         FontName = settings.FontName;
         AlertLevel = settings.AlertLevel;
         UIFontName = settings.UIFontName;

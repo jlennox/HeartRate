@@ -76,6 +76,9 @@ public partial class HeartRateForm : Form
             _watchdog = new HeartRateServiceWatchdog(TimeSpan.FromSeconds(10), _service);
 
             InitializeComponent();
+            _languageMenu = CreateLanguageMenu(_settings.Language, SelectLanguage);
+            uxNotifyIconContextMenu.Items.Insert(
+                uxNotifyIconContextMenu.Items.IndexOf(uxExitMenuItem), _languageMenu);
 
             FormBorderStyle = _settings.Sizable
                 ? FormBorderStyle.Sizable
@@ -176,8 +179,8 @@ public partial class HeartRateForm : Form
             }
             else if (isDisconnected)
             {
-                var description = $"Disconnected {status} ({bpm})";
-                uxBpmNotifyIcon.Text = description;
+                var description = UiText.Format("Disconnected {0} ({1})", UiText.Get(status.ToString()), bpm);
+                uxBpmNotifyIcon.Text = description.Truncate(60);
 
                 if (!_disconnectedTimeout.IsRunning)
                 {
@@ -230,7 +233,7 @@ public partial class HeartRateForm : Form
                 {
                     _alertTimeout.Restart();
 
-                    var alertText = $"BPMs @ {bpm}";
+                    var alertText = UiText.Format("BPMs @ {0}", bpm);
 
                     uxBpmNotifyIcon.ShowBalloonTip(
                         (int)_settings.AlertTimeout.TotalMilliseconds,
@@ -267,6 +270,9 @@ public partial class HeartRateForm : Form
 
     private void UpdateUICore()
     {
+        if (_lastSettings == null || _lastSettings.Language != _settings.Language)
+            ApplyLanguage();
+
         if (uxBpmLabel.Font.FontFamily.Name != _settings.UIFontName ||
             uxBpmLabel.Font.Style != _settings.UIFontStyle ||
             _lastSettings?.UIFontUseSize != _settings.UIFontUseSize ||
@@ -308,7 +314,7 @@ public partial class HeartRateForm : Form
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show($"Unable to load background image file \"{backgroundFile}\" due to error: {e}");
+                    MessageBox.Show(UiText.Format("Unable to load background image file \"{0}\" due to error: {1}", backgroundFile, e));
                 }
             }
             else
@@ -397,6 +403,7 @@ public partial class HeartRateForm : Form
     private void LoadSettingsLocked()
     {
         _settings.Load();
+        UiText.SelectLanguage(_settings.Language);
         LoadSettingsFilesLocked();
     }
 
@@ -449,6 +456,7 @@ public partial class HeartRateForm : Form
         foreach (var item in parent.DropDownItems)
         {
             var menuItem = (ToolStripMenuItem)item;
+            menuItem.Text = UiText.Get((string)menuItem.Tag);
             menuItem.CheckState = (string)menuItem.Tag == stringed
                 ? CheckState.Checked : CheckState.Unchecked;
         }
@@ -460,7 +468,7 @@ public partial class HeartRateForm : Form
         {
             var strip = new ToolStripMenuItem
             {
-                Text = align,
+                Text = UiText.Get(align),
                 Tag = align
             };
             strip.Click += click;

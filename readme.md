@@ -17,6 +17,10 @@ The executable and code are released under MIT license.
 
 Code can be built using [Visual Studio Community 2022](https://visualstudio.microsoft.com/vs/).
 
+The interface follows the Windows display language by default and includes English,
+Japanese, Simplified Chinese, German, Hindi, Tamil, Telugu, Spanish, French, and
+Brazilian Portuguese.
+
 Motivation
 ----------
 I owned a Polar H7 I could not get to work with any iOS software for use in the
